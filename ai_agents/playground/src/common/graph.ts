@@ -56,6 +56,7 @@ export namespace AddonDef {
 }
 
 type Property = {
+  greeting_scripts?: Array<{ name: string; text: string }>;
   [key: string]: any;
 };
 

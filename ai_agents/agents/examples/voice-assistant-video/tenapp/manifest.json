@@ -79,6 +79,18 @@
       "path": "../../../ten_packages/extension/dify_llm2_python"
     },
     {
+      "path": "../../../ten_packages/extension/gemini_llm2_python"
+    },
+    {
+      "path": "../../../ten_packages/extension/azure_asr_python"
+    },
+    {
+      "path": "../../../ten_packages/extension/rigol_llm_python"
+    },
+    {
+      "path": "../../../ten_packages/extension/mcp_client_python"
+    },
+    {
       "path": "../../../ten_packages/extension/openai_llm2_python"
     },
     {

@@ -228,7 +228,26 @@ let fetchGraphDetails: any;
 initializeGraphData = createAsyncThunk(
   "global/initializeGraphData",
   async (_, { dispatch }) => {
+    // Fetch basic graph list
     const fetchedGraphs = await apiFetchGraphs();
+    
+    // In production mode, we need to populate properties (like greeting_scripts) manually
+    // since apiFetchGraphs only returns basic info.
+    // We'll try to fetch details for each graph if possible, or fallback to a hardcoded map if endpoints fail.
+    // Since /graphs/detail endpoints are failing in production, we might need to rely on what apiFetchGraphs returns.
+    // If apiFetchGraphs returns empty nodes, we have a problem.
+    
+    // WORKAROUND: If nodes are empty, we can't get properties.
+    // However, the `Action.tsx` relies on `graphList` having nodes.
+    // Let's check if we can get the full graph list from a different endpoint or if we need to mock it for now.
+    
+    // Actually, let's try to see if we can get the property.json content directly via an API?
+    // Probably not exposed.
+    
+    // Let's assume for now we can't get dynamic properties in production without the dev server.
+    // BUT, we can hardcode the greeting scripts in the frontend as a fallback map if they are missing from the graph object.
+    // This is safer than trying to fix the backend API right now.
+    
     dispatch(setGraphList(fetchedGraphs.map((graph) => graph)));
   }
 );

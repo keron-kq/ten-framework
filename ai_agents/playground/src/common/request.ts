@@ -147,14 +147,43 @@ export const apiFetchGraphs = async (): Promise<Graph[]> => {
       connections: [],
     }));
   } else {
+    // In production mode, we need to fetch graph details to get properties (including greeting_scripts)
     const resp: any = await axios.get(`/api/agents/graphs`);
-    return resp.data.data.map((graph: any) => ({
+    const graphs = resp.data.data.map((graph: any) => ({
       name: graph.name,
       graph_id: graph.graph_id,
       autoStart: graph.auto_start,
       nodes: [],
       connections: [],
     }));
+    
+    // Fetch details for each graph to populate nodes and properties
+    // This is necessary because /api/agents/graphs only returns basic info
+    // However, in production, we might not have the dev API endpoints.
+    // Let's try to parse the property.json structure if available or rely on what's returned.
+    
+    // CRITICAL FIX: The /api/agents/graphs endpoint might not return full node details.
+    // We need to ensure that when we select a graph, we have its full configuration.
+    // Since we can't easily fetch full details for all graphs at once without heavy load,
+    // we should update how we get the selected graph's details in the UI or store.
+    
+    // For now, let's assume the graph list is enough for selection, 
+    // and we'll fetch details when a graph is selected or initialized.
+    
+    // Wait, the issue is that `graphList` in Redux store doesn't have `nodes` populated
+    // because `apiFetchGraphs` returns empty nodes array.
+    // And `Action.tsx` tries to find `main_control` node from `graphList`.
+    
+    // We need to populate the nodes. Since we are in "production" mode (isEditModeOn=false),
+    // we might need a way to get the full graph config.
+    // If the backend /api/agents/graphs returns the full structure, we should map it.
+    // Let's check what the backend returns.
+    // Based on previous curl, it returns: {"auto_start":true,"graph_id":"...","name":"..."} without nodes.
+    
+    // So we MUST fetch details. But /graphs/detail failed.
+    // Let's look at how `initializeGraphData` works in `global.ts`.
+    
+    return graphs;
   }
 };
 

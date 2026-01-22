@@ -15,14 +15,17 @@ import {
 import { LoadingButton } from "@/components/Button/LoadingButton";
 import { RemoteGraphSelect } from "@/components/Chat/ChatCfgGraphSelect";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { setAgentConnected, setMobileActiveTab } from "@/store/reducers/global";
 import { TrulienceCfgSheet } from "../Chat/ChatCfgTrulienceSetting";
+import { GREETING_SCRIPTS_MAP } from "@/data/greetingScripts";
 
 let intervalId: NodeJS.Timeout | null = null;
 
-export default function Action(props: { className?: string }) {
-  const { className } = props;
+export default function ActionBar(props: { className?: string; onSpeak?: (text: string) => void }) {
+  const { className, onSpeak } = props;
   const dispatch = useAppDispatch();
   const agentConnected = useAppSelector((state) => state.global.agentConnected);
   const channel = useAppSelector((state) => state.global.options.channel);
@@ -37,6 +40,33 @@ export default function Action(props: { className?: string }) {
     (state) => state.global.mobileActiveTab
   );
   const [loading, setLoading] = React.useState(false);
+
+  // Get greeting scripts for the selected graph
+  // Priority 1: From graph properties (if available via API)
+  // Priority 2: From fallback map (for production mode)
+  const selectedGraph = graphList.find((g) => g.graph_id === selectedGraphId);
+  const mainControlNode = selectedGraph?.nodes?.find(
+    (n) => n.name === "main_control"
+  );
+  
+  let greetingScripts = mainControlNode?.property?.greeting_scripts as Array<{
+    name: string;
+    text: string;
+  }>;
+
+  // Fallback if not found in graph properties
+  // Note: selectedGraphId might be empty initially, or might not match keys in map exactly if there are prefixes
+  // The map keys are like "part2_AIReview", ensuring selectedGraphId matches.
+  if (!greetingScripts && selectedGraphId) {
+    // Check direct match
+    if (GREETING_SCRIPTS_MAP[selectedGraphId]) {
+        greetingScripts = GREETING_SCRIPTS_MAP[selectedGraphId];
+    } 
+    // Check if graph name matches (sometimes id is uuid but name is what we want)
+    else if (selectedGraph?.name && GREETING_SCRIPTS_MAP[selectedGraph.name]) {
+        greetingScripts = GREETING_SCRIPTS_MAP[selectedGraph.name];
+    }
+  }
 
   React.useEffect(() => {
     if (channel) {
@@ -130,7 +160,7 @@ export default function Action(props: { className?: string }) {
         <div className="hidden md:block">
           <span className="font-bold text-sm">Description</span>
           <span className="ml-2 whitespace-nowrap text-muted-foreground text-xs">
-            A Realtime Conversational AI Agent powered by TEN
+            A Realtime Conversational AI Agent powered by RIGOL
           </span>
         </div>
 
@@ -153,6 +183,34 @@ export default function Action(props: { className?: string }) {
           {/* -- Graph Select Part */}
           <div className="mt-2 flex w-full items-center justify-between gap-2 md:mt-0 md:w-auto md:flex-wrap">
             <RemoteGraphSelect />
+            
+            {/* Greeting Scripts Buttons */}
+            {greetingScripts && greetingScripts.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto max-w-[400px] no-scrollbar">
+                {greetingScripts.map((script, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs whitespace-nowrap border-[#FFCC00]/50 text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black z-50 relative cursor-pointer"
+                    onClick={(e) => {
+                        e.stopPropagation(); // Prevent bubbling
+                        console.log("Greeting button clicked:", script.text);
+                        if (onSpeak) {
+                            onSpeak(script.text);
+                        } else {
+                            console.error("onSpeak prop is missing in ActionBar");
+                        }
+                    }}
+                    title={script.text}
+                  >
+                    <Play className="mr-1 h-3 w-3" />
+                    {script.name}
+                  </Button>
+                ))}
+              </div>
+            )}
+
             {isEditModeOn && (
               <>
                 <TrulienceCfgSheet />

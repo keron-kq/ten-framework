@@ -42,6 +42,11 @@ class MainControlExtension(AsyncExtension):
         self.sentence_fragment: str = ""
         self.turn_id: int = 0
         self.session_id: str = "0"
+        
+        # Conversation State Machine
+        self.in_conversation: bool = False
+        self.last_interaction_time: float = 0.0
+        self.conversation_timeout: float = 30.0  # 30 seconds timeout
 
     def _current_metadata(self) -> dict:
         return {"session_id": self.session_id, "turn_id": self.turn_id}
@@ -86,6 +91,34 @@ class MainControlExtension(AsyncExtension):
         stream_id = int(self.session_id)
         if not event.text:
             return
+
+        # --- CONVERSATION STATE MACHINE ---
+        current_time = time.time()
+        
+        # 1. Check timeout
+        if self.in_conversation and (current_time - self.last_interaction_time > self.conversation_timeout):
+            self.in_conversation = False
+            self.ten_env.log_info("[MainControl] Conversation timed out, returning to idle mode.")
+
+        # 2. Check for wake words
+        WAKE_WORDS = ["小源", "你好", "打断", "停", "Hey", "Stop", "Wait"]
+        has_wake_word = any(w in event.text for w in WAKE_WORDS)
+
+        # 3. State Transition Logic
+        if has_wake_word:
+            if not self.in_conversation:
+                self.ten_env.log_info(f"[MainControl] Wake word detected: '{event.text}'. Entering conversation mode.")
+            self.in_conversation = True
+            self.last_interaction_time = current_time
+        elif self.in_conversation:
+            # Already in conversation, extend session
+            self.last_interaction_time = current_time
+        else:
+            # Not in conversation and no wake word -> Ignore
+            # self.ten_env.log_info(f"[MainControl] Ignoring speech (Idle mode): {event.text}")
+            return
+        # -------------------------------------------
+
         if event.final or len(event.text) > 2:
             await self._interrupt()
         if event.final:
@@ -95,6 +128,10 @@ class MainControlExtension(AsyncExtension):
 
     @agent_event_handler(LLMResponseEvent)
     async def _on_llm_response(self, event: LLMResponseEvent):
+        # Keep conversation alive while agent is speaking
+        if self.in_conversation:
+            self.last_interaction_time = time.time()
+
         if not event.is_final and event.type == "message":
             sentences, self.sentence_fragment = parse_sentences(
                 self.sentence_fragment, event.delta

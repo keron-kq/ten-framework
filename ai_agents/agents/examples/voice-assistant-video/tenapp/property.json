@@ -2,7 +2,7 @@
   "ten": {
     "predefined_graphs": [
       {
-        "name": "voice_assistant",
+        "name": "part1_begginning",
         "auto_start": true,
         "graph": {
           "nodes": [
@@ -28,14 +28,34 @@
             {
               "type": "extension",
               "name": "stt",
-              "addon": "deepgram_asr_python",
+              "addon": "azure_asr_python",
               "extension_group": "stt",
               "property": {
-                "params": {
-                  "api_key": "${env:DEEPGRAM_API_KEY}",
-                  "language": "en-US",
-                  "model": "nova-3"
-                }
+                "key": "${env:AZURE_STT_KEY}",
+                "region": "${env:AZURE_STT_REGION}",
+                "language": "zh-CN",
+                "phrase_list": [
+                  "普源精电",
+                  "RIGOL",
+                  "示波器",
+                  "频谱仪",
+                  "带宽",
+                  "采样率",
+                  "万用表",
+                  "信号源",
+                  "电源",
+                  "MSO",
+                  "DHO",
+                  "波形",
+                  "触发",
+                  "通道",
+                  "探头",
+                  "分辨率",
+                  "存储深度",
+                  "逻辑分析仪",
+                  "矢量网络分析仪",
+                  "函数发生器"
+                ]
               }
             },
             {
@@ -49,26 +69,10 @@
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
                 "max_tokens": 512,
-                "prompt": "",
+                "prompt": "你代表普源精电（RIGOL），作为一个活泼轻快的主持人，负责晚会开场环节的开场白和晚会中的简单问题回应。",
                 "proxy_url": "${env:OPENAI_PROXY_URL|}",
-                "greeting": "TEN Agent connected. How can I help you today?",
+                "greeting": "各位来宾，各位极客，大家晚上好！欢迎来到我们2026年度AI论坛的年会现场！我是今晚的主持人“小源”。环顾四周，我看到的不是普通的观众，而是即将改变世界的变革者。如果说2023年是AI的觉醒元年，那么刚刚过去的2025年，就是AI全面渗透进我们要害行业的“实战之年”。今晚，我们不念PPT，不讲空话。我们将用一个小时，带大家坐上一辆通往未来的“过山车”，从艺术创作到硬核工业，亲眼见证AI是如何从“云端”落地到“指尖”的！大家准备好了吗？掌声告诉我！",
                 "max_memory_length": 10
-              }
-            },
-            {
-              "type": "extension",
-              "name": "tts",
-              "addon": "elevenlabs_tts2_python",
-              "extension_group": "tts",
-              "property": {
-                "dump": false,
-                "dump_path": "./",
-                "params": {
-                  "key": "${env:ELEVENLABS_TTS_KEY}",
-                  "model_id": "eleven_multilingual_v2",
-                  "voice_id": "pNInz6obpgDQGcFmaJgB",
-                  "output_format": "pcm_16000"
-                }
               }
             },
             {
@@ -77,7 +81,7 @@
               "addon": "main_python",
               "extension_group": "control",
               "property": {
-                "greeting": "TEN Agent connected. How can I help you today?"
+                "greeting": "各位来宾，各位极客，大家晚上好！欢迎来到我们2026年度AI论坛的年会现场！我是今晚的主持人“小源”。环顾四周，我看到的不是普通的观众，而是即将改变世界的变革者。如果说2023年是AI的觉醒元年，那么刚刚过去的2025年，就是AI全面渗透进我们要害行业的“实战之年”。今晚，我们不念PPT，不讲空话。我们将用一个小时，带大家坐上一辆通往未来的“过山车”，从艺术创作到硬核工业，亲眼见证AI是如何从“云端”落地到“指尖”的！大家准备好了吗？掌声告诉我！"
               }
             },
             {
@@ -96,6 +100,24 @@
             },
             {
               "type": "extension",
+              "name": "weather_tool",
+              "addon": "weatherapi_tool_python",
+              "extension_group": "default",
+              "property": {
+                "api_key": "${env:WEATHERAPI_API_KEY}"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "mcp_tool",
+              "addon": "mcp_client_python",
+              "extension_group": "default",
+              "property": {
+                "url": "http://localhost:3002/sse"
+              }
+            },
+            {
+              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -110,7 +132,7 @@
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
                 "max_tokens": 512,
-                "prompt": "",
+                "prompt": "你是一个乐于助人的中文AI助手。请始终使用中文回复用户的问题。你的回答应该简洁、准确且富有同理心。",
                 "proxy_url": "${env:OPENAI_PROXY_URL|}"
               }
             }
@@ -137,6 +159,23 @@
                   "source": [
                     {
                       "extension": "vision_tool_python"
+                    },
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                },
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -153,6 +192,32 @@
               ]
             },
             {
+              "extension": "weather_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "mcp_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
               "extension": "agora_rtc",
               "audio_frame": [
                 {
@@ -162,12 +227,2328 @@
                       "extension": "streamid_adapter"
                     }
                   ]
-                },
+                }
+              ],
+              "data": [
                 {
-                  "name": "pcm_frame",
+                  "name": "data",
                   "source": [
                     {
-                      "extension": "tts"
+                      "extension": "message_collector"
+                    }
+                  ]
+                }
+              ],
+              "video_frame": [
+                {
+                  "name": "video_frame",
+                  "dest": [
+                    {
+                      "extension": "vision_tool_python"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "streamid_adapter",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "vision_tool_python",
+              "cmd": [
+                {
+                  "name": "chat_completion",
+                  "dest": [
+                    {
+                      "extension": "vllm"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "part2_AIReview",
+        "auto_start": false,
+        "graph": {
+          "nodes": [
+            {
+              "type": "extension",
+              "name": "agora_rtc",
+              "addon": "agora_rtc",
+              "extension_group": "default",
+              "property": {
+                "app_id": "${env:AGORA_APP_ID}",
+                "app_certificate": "${env:AGORA_APP_CERTIFICATE|}",
+                "channel": "ten_agent_test",
+                "stream_id": 1234,
+                "remote_stream_id": 123,
+                "subscribe_audio": true,
+                "publish_audio": true,
+                "publish_data": true,
+                "enable_agora_asr": false,
+                "subscribe_video": true,
+                "subscribe_video_pix_fmt": 4
+              }
+            },
+            {
+              "type": "extension",
+              "name": "stt",
+              "addon": "azure_asr_python",
+              "extension_group": "stt",
+              "property": {
+                "key": "${env:AZURE_STT_KEY}",
+                "region": "${env:AZURE_STT_REGION}",
+                "language": "zh-CN",
+                "phrase_list": [
+                  "普源精电",
+                  "RIGOL",
+                  "示波器",
+                  "频谱仪",
+                  "带宽",
+                  "采样率",
+                  "万用表",
+                  "信号源",
+                  "电源",
+                  "MSO",
+                  "DHO",
+                  "波形",
+                  "触发",
+                  "通道",
+                  "探头",
+                  "分辨率",
+                  "存储深度",
+                  "逻辑分析仪",
+                  "矢量网络分析仪",
+                  "函数发生器"
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "llm",
+              "addon": "openai_llm2_python",
+              "extension_group": "chatgpt",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "作为普源精电（RIGOL）的资深AI应用专家，你专业且经验丰富，能够直接明了地回顾AI发展历程。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}",
+                "greeting": "首先，让我们把时钟拨回到2025年的起点。这一年，AI届发生了太多炸裂的大事。大家看，2025年，大模型不再只是聊天机器。我们看到了多模态模型的爆发，它不仅能看懂复杂的工业图纸，还能像人一样进行逻辑推理。",
+                "max_memory_length": 10
+              }
+            },
+            {
+              "type": "extension",
+              "name": "main_control",
+              "addon": "main_python",
+              "extension_group": "control",
+              "property": {
+                "greeting": "首先，让我们把时钟拨回到2025年的起点。这一年，AI届发生了太多炸裂的大事。大家看，2025年，大模型不再只是聊天机器。我们看到了多模态模型的爆发，它不仅能看懂复杂的工业图纸，还能像人一样进行逻辑推理。",
+                "greeting_scripts": [
+                  {
+                    "name": "2025大事回顾",
+                    "text": "首先，让我们把时钟拨回到2025年的起点。这一年，AI届发生了太多炸裂的大事。大家看，2025年，大模型不再只是聊天机器。我们看到了多模态模型的爆发，它不仅能看懂复杂的工业图纸，还能像人一样进行逻辑推理。"
+                  },
+                  {
+                    "name": "Agent之年",
+                    "text": "我们见证了算力成本的断崖式下跌，也目睹了AI Agent（智能体）开始独立完成复杂任务。如果用一个词形容2025，那就是——“Agent（代理）之年”。AI不再是“听话的工具”，它开始变成了“思考的伙伴”。"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "message_collector",
+              "addon": "message_collector2",
+              "extension_group": "transcriber",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vision_tool_python",
+              "addon": "vision_analyze_tool_python",
+              "extension_group": "default",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "weather_tool",
+              "addon": "weatherapi_tool_python",
+              "extension_group": "default",
+              "property": {
+                "api_key": "${env:WEATHERAPI_API_KEY}"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "mcp_tool",
+              "addon": "mcp_client_python",
+              "extension_group": "default",
+              "property": {
+                "url": "http://localhost:3002/sse"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "streamid_adapter",
+              "addon": "streamid_adapter",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vllm",
+              "addon": "openai_llm2_python",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "你是一个乐于助人的中文AI助手。请始终使用中文回复用户的问题。你的回答应该简洁、准确且富有同理心。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}"
+              }
+            }
+          ],
+          "connections": [
+            {
+              "extension": "main_control",
+              "cmd": [
+                {
+                  "names": [
+                    "on_user_joined",
+                    "on_user_left"
+                  ],
+                  "source": [
+                    {
+                      "extension": "agora_rtc"
+                    }
+                  ]
+                },
+                {
+                  "names": [
+                    "tool_register"
+                  ],
+                  "source": [
+                    {
+                      "extension": "vision_tool_python"
+                    },
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                },
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "asr_result",
+                  "source": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "weather_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "mcp_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "agora_rtc",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "streamid_adapter"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "data",
+                  "source": [
+                    {
+                      "extension": "message_collector"
+                    }
+                  ]
+                }
+              ],
+              "video_frame": [
+                {
+                  "name": "video_frame",
+                  "dest": [
+                    {
+                      "extension": "vision_tool_python"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "streamid_adapter",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "vision_tool_python",
+              "cmd": [
+                {
+                  "name": "chat_completion",
+                  "dest": [
+                    {
+                      "extension": "vllm"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "part3_Musicgeneration",
+        "auto_start": false,
+        "graph": {
+          "nodes": [
+            {
+              "type": "extension",
+              "name": "agora_rtc",
+              "addon": "agora_rtc",
+              "extension_group": "default",
+              "property": {
+                "app_id": "${env:AGORA_APP_ID}",
+                "app_certificate": "${env:AGORA_APP_CERTIFICATE|}",
+                "channel": "ten_agent_test",
+                "stream_id": 1234,
+                "remote_stream_id": 123,
+                "subscribe_audio": true,
+                "publish_audio": true,
+                "publish_data": true,
+                "enable_agora_asr": false,
+                "subscribe_video": true,
+                "subscribe_video_pix_fmt": 4
+              }
+            },
+            {
+              "type": "extension",
+              "name": "stt",
+              "addon": "azure_asr_python",
+              "extension_group": "stt",
+              "property": {
+                "key": "${env:AZURE_STT_KEY}",
+                "region": "${env:AZURE_STT_REGION}",
+                "language": "zh-CN",
+                "phrase_list": [
+                  "普源精电",
+                  "RIGOL",
+                  "示波器",
+                  "频谱仪",
+                  "带宽",
+                  "采样率",
+                  "万用表",
+                  "信号源",
+                  "电源",
+                  "MSO",
+                  "DHO",
+                  "波形",
+                  "触发",
+                  "通道",
+                  "探头",
+                  "分辨率",
+                  "存储深度",
+                  "逻辑分析仪",
+                  "矢量网络分析仪",
+                  "函数发生器"
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "llm",
+              "addon": "openai_llm2_python",
+              "extension_group": "chatgpt",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "作为普源精电（RIGOL）的AIGC领域专家，你对AI生成视频和音乐有深入了解，能够简明扼要地解答相关技术问题。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}",
+                "greeting": "回顾完历史，让我们轻松一下。年会有个传统项目——才艺展示。但今年的才艺，不是人表演的，而是AI“算”出来的。请欣赏，由我们团队利用AI全流程制作的年会主题曲MV——《代码的脉搏》。",
+                "max_memory_length": 10
+              }
+            },
+            {
+              "type": "extension",
+              "name": "main_control",
+              "addon": "main_python",
+              "extension_group": "control",
+              "property": {
+                "greeting": "回顾完历史，让我们轻松一下。年会有个传统项目——才艺展示。但今年的才艺，不是人表演的，而是AI“算”出来的。请欣赏，由我们团队利用AI全流程制作的年会主题曲MV——《代码的脉搏》。",
+                "greeting_scripts": [
+                  {
+                    "name": "才艺展示",
+                    "text": "回顾完历史，让我们轻松一下。年会有个传统项目——才艺展示。但今年的才艺，不是人表演的，而是AI“算”出来的。请欣赏，由我们团队利用AI全流程制作的年会主题曲MV——《代码的脉搏》。"
+                  },
+                  {
+                    "name": "技术揭秘",
+                    "text": "是不是觉得不仅旋律洗脑，画面还特别赛博朋克？给大家揭秘一下背后的技术：\n  - 音乐部分： 我们使用了Suno的音频生成模型。它的原理就像是一个“音乐接龙”高手，通过学习海量的乐理和声波数据，它并不懂五线谱，但它理解音频在大数据维度的概率分布，从而预测出下一个最动听的音符。\n  - 画面部分： 则是视频生成模型的杰作。我们输入了提示词，模型通过扩散模型（Diffusion Model），从一片噪点中一步步“降噪”，还原出了这些从未存在过的震撼画面。\n这就是AI的创造力，它把想象力的门槛降到了最低！"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "message_collector",
+              "addon": "message_collector2",
+              "extension_group": "transcriber",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vision_tool_python",
+              "addon": "vision_analyze_tool_python",
+              "extension_group": "default",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "weather_tool",
+              "addon": "weatherapi_tool_python",
+              "extension_group": "default",
+              "property": {
+                "api_key": "${env:WEATHERAPI_API_KEY}"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "mcp_tool",
+              "addon": "mcp_client_python",
+              "extension_group": "default",
+              "property": {
+                "url": "http://localhost:3002/sse"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "streamid_adapter",
+              "addon": "streamid_adapter",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vllm",
+              "addon": "openai_llm2_python",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "你是一个乐于助人的中文AI助手。请始终使用中文回复用户的问题。你的回答应该简洁、准确且富有同理心。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}"
+              }
+            }
+          ],
+          "connections": [
+            {
+              "extension": "main_control",
+              "cmd": [
+                {
+                  "names": [
+                    "on_user_joined",
+                    "on_user_left"
+                  ],
+                  "source": [
+                    {
+                      "extension": "agora_rtc"
+                    }
+                  ]
+                },
+                {
+                  "names": [
+                    "tool_register"
+                  ],
+                  "source": [
+                    {
+                      "extension": "vision_tool_python"
+                    },
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                },
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "asr_result",
+                  "source": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "weather_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "mcp_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "agora_rtc",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "streamid_adapter"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "data",
+                  "source": [
+                    {
+                      "extension": "message_collector"
+                    }
+                  ]
+                }
+              ],
+              "video_frame": [
+                {
+                  "name": "video_frame",
+                  "dest": [
+                    {
+                      "extension": "vision_tool_python"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "streamid_adapter",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "vision_tool_python",
+              "cmd": [
+                {
+                  "name": "chat_completion",
+                  "dest": [
+                    {
+                      "extension": "vllm"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "part4_Intelligentconversation",
+        "auto_start": false,
+        "graph": {
+          "nodes": [
+            {
+              "type": "extension",
+              "name": "agora_rtc",
+              "addon": "agora_rtc",
+              "extension_group": "default",
+              "property": {
+                "app_id": "${env:AGORA_APP_ID}",
+                "app_certificate": "${env:AGORA_APP_CERTIFICATE|}",
+                "channel": "ten_agent_test",
+                "stream_id": 1234,
+                "remote_stream_id": 123,
+                "subscribe_audio": true,
+                "publish_audio": true,
+                "publish_data": true,
+                "enable_agora_asr": false,
+                "subscribe_video": true,
+                "subscribe_video_pix_fmt": 4
+              }
+            },
+            {
+              "type": "extension",
+              "name": "stt",
+              "addon": "azure_asr_python",
+              "extension_group": "stt",
+              "property": {
+                "key": "${env:AZURE_STT_KEY}",
+                "region": "${env:AZURE_STT_REGION}",
+                "language": "zh-CN",
+                "phrase_list": [
+                  "普源精电",
+                  "RIGOL",
+                  "示波器",
+                  "频谱仪",
+                  "带宽",
+                  "采样率",
+                  "万用表",
+                  "信号源",
+                  "电源",
+                  "MSO",
+                  "DHO",
+                  "波形",
+                  "触发",
+                  "通道",
+                  "探头",
+                  "分辨率",
+                  "存储深度",
+                  "逻辑分析仪",
+                  "矢量网络分析仪",
+                  "函数发生器"
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "llm",
+              "addon": "openai_llm2_python",
+              "extension_group": "chatgpt",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "作为普源精电（RIGOL）打造的具备强逻辑思维能力的AI助手，你能够针对问题按照“原因+建议+解决步骤”的思路给出结构化答案。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}",
+                "greeting": "接下来用10分钟做三段演示——从智能问答，到企业知识，再到语音控制硬件，让大家看到大模型如何一步步走进真实业务流程。首先是最直观的一段：智能对话问答。",
+                "max_memory_length": 10
+              }
+            },
+            {
+              "type": "extension",
+              "name": "main_control",
+              "addon": "main_python",
+              "extension_group": "control",
+              "property": {
+                "greeting": "接下来用10分钟做三段演示——从智能问答，到企业知识，再到语音控制硬件，让大家看到大模型如何一步步走进真实业务流程。首先是最直观的一段：智能对话问答。",
+                "greeting_scripts": [
+                  {
+                    "name": "三段演示",
+                    "text": "接下来用10分钟做三段演示——从智能问答，到企业知识，再到语音控制硬件，让大家看到大模型如何一步步走进真实业务流程。首先是最直观的一段：智能对话问答。"
+                  },
+                  {
+                    "name": "信息获取效率",
+                    "text": "你会发现它不是在背书，而是在把问题拆解、归因、给路径：\n  - 先澄清场景和约束\n  - 再给可执行的排查顺序\n  - 最后输出可以直接照做的步骤清单\n这一步解决的是：“信息获取效率”。"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "message_collector",
+              "addon": "message_collector2",
+              "extension_group": "transcriber",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vision_tool_python",
+              "addon": "vision_analyze_tool_python",
+              "extension_group": "default",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "weather_tool",
+              "addon": "weatherapi_tool_python",
+              "extension_group": "default",
+              "property": {
+                "api_key": "${env:WEATHERAPI_API_KEY}"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "mcp_tool",
+              "addon": "mcp_client_python",
+              "extension_group": "default",
+              "property": {
+                "url": "http://localhost:3002/sse"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "streamid_adapter",
+              "addon": "streamid_adapter",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vllm",
+              "addon": "openai_llm2_python",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "你是一个乐于助人的中文AI助手。请始终使用中文回复用户的问题。你的回答应该简洁、准确且富有同理心。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}"
+              }
+            }
+          ],
+          "connections": [
+            {
+              "extension": "main_control",
+              "cmd": [
+                {
+                  "names": [
+                    "on_user_joined",
+                    "on_user_left"
+                  ],
+                  "source": [
+                    {
+                      "extension": "agora_rtc"
+                    }
+                  ]
+                },
+                {
+                  "names": [
+                    "tool_register"
+                  ],
+                  "source": [
+                    {
+                      "extension": "vision_tool_python"
+                    },
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                },
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "asr_result",
+                  "source": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "weather_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "mcp_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "agora_rtc",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "streamid_adapter"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "data",
+                  "source": [
+                    {
+                      "extension": "message_collector"
+                    }
+                  ]
+                }
+              ],
+              "video_frame": [
+                {
+                  "name": "video_frame",
+                  "dest": [
+                    {
+                      "extension": "vision_tool_python"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "streamid_adapter",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "vision_tool_python",
+              "cmd": [
+                {
+                  "name": "chat_completion",
+                  "dest": [
+                    {
+                      "extension": "vllm"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "part5_SharingCenter",
+        "auto_start": false,
+        "graph": {
+          "nodes": [
+            {
+              "type": "extension",
+              "name": "agora_rtc",
+              "addon": "agora_rtc",
+              "extension_group": "default",
+              "property": {
+                "app_id": "${env:AGORA_APP_ID}",
+                "app_certificate": "${env:AGORA_APP_CERTIFICATE|}",
+                "channel": "ten_agent_test",
+                "stream_id": 1234,
+                "remote_stream_id": 123,
+                "subscribe_audio": true,
+                "publish_audio": true,
+                "publish_data": true,
+                "enable_agora_asr": false,
+                "subscribe_video": true,
+                "subscribe_video_pix_fmt": 4
+              }
+            },
+            {
+              "type": "extension",
+              "name": "stt",
+              "addon": "azure_asr_python",
+              "extension_group": "stt",
+              "property": {
+                "key": "${env:AZURE_STT_KEY}",
+                "region": "${env:AZURE_STT_REGION}",
+                "language": "zh-CN",
+                "phrase_list": [
+                  "普源精电",
+                  "RIGOL",
+                  "示波器",
+                  "频谱仪",
+                  "带宽",
+                  "采样率",
+                  "万用表",
+                  "信号源",
+                  "电源",
+                  "MSO",
+                  "DHO",
+                  "波形",
+                  "触发",
+                  "通道",
+                  "探头",
+                  "分辨率",
+                  "存储深度",
+                  "逻辑分析仪",
+                  "矢量网络分析仪",
+                  "函数发生器"
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "llm",
+              "addon": "openai_llm2_python",
+              "extension_group": "fastgpt",
+              "property": {
+                "base_url": "${env:FASTGPT_BASE_URL|https://aipatent.rigol.com/api/v1}",
+                "api_key": "${env:FASTGPT_API_KEY}",
+                "model": "fastgpt-app",
+                "frequency_penalty": 0.0,
+                "max_tokens": 512,
+                "prompt": "",
+                "greeting": "光会聊天还不够。企业真正卡住的，是内部知识分散、口径不一致、找人找半天。\n所以第二段我们接入公司的“共享中心”（制度/流程/FAQ/案例/模板等沉淀库），让AI做内部知识问答。",
+                "max_memory_length": 10
+              }
+            },
+            {
+              "type": "extension",
+              "name": "main_control",
+              "addon": "main_python",
+              "extension_group": "control",
+              "property": {
+                "greeting": "光会聊天还不够。企业真正卡住的，是内部知识分散、口径不一致、找人找半天。\n所以第二段我们接入公司的“共享中心”（制度/流程/FAQ/案例/模板等沉淀库），让AI做内部知识问答。",
+                "greeting_scripts": [
+                  {
+                    "name": "共享中心接入",
+                    "text": "光会聊天还不够。企业真正卡住的，是内部知识分散、口径不一致、找人找半天。\n所以第二段我们接入公司的“共享中心”（制度/流程/FAQ/案例/模板等沉淀库），让AI做内部知识问答。"
+                  },
+                  {
+                    "name": "知识可用性",
+                    "text": "这一段的重点是：它不是“猜”，而是基于公司内部知识库检索与引用，做到：\n  - 口径统一\n  - 有据可查（可追溯到文档来源）\n  - 新人也能快速上手\n这一步解决的是：“组织知识的可用性”。"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "message_collector",
+              "addon": "message_collector2",
+              "extension_group": "transcriber",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vision_tool_python",
+              "addon": "vision_analyze_tool_python",
+              "extension_group": "default",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "weather_tool",
+              "addon": "weatherapi_tool_python",
+              "extension_group": "default",
+              "property": {
+                "api_key": "${env:WEATHERAPI_API_KEY}"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "mcp_tool",
+              "addon": "mcp_client_python",
+              "extension_group": "default",
+              "property": {
+                "url": "http://localhost:3002/sse"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "streamid_adapter",
+              "addon": "streamid_adapter",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vllm",
+              "addon": "openai_llm2_python",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "你是一个乐于助人的中文AI助手。请始终使用中文回复用户的问题。你的回答应该简洁、准确且富有同理心。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}"
+              }
+            }
+          ],
+          "connections": [
+            {
+              "extension": "main_control",
+              "cmd": [
+                {
+                  "names": [
+                    "on_user_joined",
+                    "on_user_left"
+                  ],
+                  "source": [
+                    {
+                      "extension": "agora_rtc"
+                    }
+                  ]
+                },
+                {
+                  "names": [
+                    "tool_register"
+                  ],
+                  "source": [
+                    {
+                      "extension": "vision_tool_python"
+                    },
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                },
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "asr_result",
+                  "source": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "weather_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "mcp_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "agora_rtc",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "streamid_adapter"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "data",
+                  "source": [
+                    {
+                      "extension": "message_collector"
+                    }
+                  ]
+                }
+              ],
+              "video_frame": [
+                {
+                  "name": "video_frame",
+                  "dest": [
+                    {
+                      "extension": "vision_tool_python"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "streamid_adapter",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "vision_tool_python",
+              "cmd": [
+                {
+                  "name": "chat_completion",
+                  "dest": [
+                    {
+                      "extension": "vllm"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "part6_Oscilloscopecontrol",
+        "auto_start": false,
+        "graph": {
+          "nodes": [
+            {
+              "type": "extension",
+              "name": "agora_rtc",
+              "addon": "agora_rtc",
+              "extension_group": "default",
+              "property": {
+                "app_id": "${env:AGORA_APP_ID}",
+                "app_certificate": "${env:AGORA_APP_CERTIFICATE|}",
+                "channel": "ten_agent_test",
+                "stream_id": 1234,
+                "remote_stream_id": 123,
+                "subscribe_audio": true,
+                "publish_audio": true,
+                "publish_data": true,
+                "enable_agora_asr": false,
+                "subscribe_video": true,
+                "subscribe_video_pix_fmt": 4
+              }
+            },
+            {
+              "type": "extension",
+              "name": "stt",
+              "addon": "azure_asr_python",
+              "extension_group": "stt",
+              "property": {
+                "key": "${env:AZURE_STT_KEY}",
+                "region": "${env:AZURE_STT_REGION}",
+                "language": "zh-CN",
+                "phrase_list": [
+                  "普源精电",
+                  "RIGOL",
+                  "示波器",
+                  "频谱仪",
+                  "带宽",
+                  "采样率",
+                  "万用表",
+                  "信号源",
+                  "电源",
+                  "MSO",
+                  "DHO",
+                  "波形",
+                  "触发",
+                  "通道",
+                  "电压",
+                  "伏特",
+                  "电流",
+                  "毫伏",
+                  "毫安",
+                  "水平",
+                  "垂直",
+                  "幅度",
+                  "正弦",
+                  "余弦",
+                  "无限余辉",
+                  "心电图",
+                  "时基",
+                  "峰峰值",
+                  "AWG",
+                  "赫兹",
+                  "脉宽",
+                  "毫秒",
+                  "源",
+                  "主时基",
+                  "延迟时基",
+                  "欧姆",
+                  "脉宽",
+                  "正脉冲",
+                  "纳秒",
+                  "伯德图",
+                  "对数扫频"
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "llm",
+              "addon": "rigol_llm_python",
+              "extension_group": "rigol",
+              "property": {
+                "base_url": "${env:RIGOL_BASE_URL|http://172.18.60.51:8102/v1}",
+                "api_key": "${env:RIGOL_API_KEY|sk-1234}",
+                "model": "${env:RIGOL_MODEL|示波器_agent}",
+                "extra_headers": "{\"X-Mode\": \"agent\"}",
+                "max_tokens": 512,
+                "prompt": "你是普源精电（RIGOL）的专业示波器技术支持助手。请始终使用中文回复用户的问题。",
+                "greeting": "前面两段解决的是“问”和“查”，第三段我们来硬核一点：不动手，只动嘴，语音控制示波器。",
+                "max_memory_length": 10
+              }
+            },
+            {
+              "type": "extension",
+              "name": "main_control",
+              "addon": "main_python",
+              "extension_group": "control",
+              "property": {
+                "greeting": "前面两段解决的是“问”和“查”，第三段我们来硬核一点：不动手，只动嘴，语音控制示波器。",
+                "greeting_scripts": [
+                  {
+                    "name": "语音控制",
+                    "text": "前面两段解决的是“问”和“查”，第三段我们来硬核一点：不动手，只动嘴，语音控制示波器。"
+                  },
+                  {
+                    "name": "言出法随",
+                    "text": "看到了吗？从指令到动作，全自动。\n背后的技术不是“魔法”，而是三件事串起来：\n  1. 意图识别：听懂我想“设置/测量/保存”。\n  2. 参数提取：提取“1ms/div、0.5V、CH1、上升沿”等关键参数。\n  3. 指令执行：把自然语言转换为仪器能理解的控制指令（如SCPI等），再下发给硬件执行，并回传状态。\n这就是AI时代的“言出法随”：\n  - 对人：用自然语言交互\n  - 对系统：用标准指令精确执行\n  - 对现场：把动作闭环到设备和结果"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "message_collector",
+              "addon": "message_collector2",
+              "extension_group": "transcriber",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vision_tool_python",
+              "addon": "vision_analyze_tool_python",
+              "extension_group": "default",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "weather_tool",
+              "addon": "weatherapi_tool_python",
+              "extension_group": "default",
+              "property": {
+                "api_key": "${env:WEATHERAPI_API_KEY}"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "mcp_tool",
+              "addon": "mcp_client_python",
+              "extension_group": "default",
+              "property": {
+                "url": "http://localhost:3002/sse"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "streamid_adapter",
+              "addon": "streamid_adapter",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vllm",
+              "addon": "openai_llm2_python",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "你是一个乐于助人的中文AI助手。请始终使用中文回复用户的问题。你的回答应该简洁、准确且富有同理心。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}"
+              }
+            }
+          ],
+          "connections": [
+            {
+              "extension": "main_control",
+              "cmd": [
+                {
+                  "names": [
+                    "on_user_joined",
+                    "on_user_left"
+                  ],
+                  "source": [
+                    {
+                      "extension": "agora_rtc"
+                    }
+                  ]
+                },
+                {
+                  "names": [
+                    "tool_register"
+                  ],
+                  "source": [
+                    {
+                      "extension": "vision_tool_python"
+                    },
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                },
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "asr_result",
+                  "source": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "weather_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "mcp_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "agora_rtc",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "streamid_adapter"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "data",
+                  "source": [
+                    {
+                      "extension": "message_collector"
+                    }
+                  ]
+                }
+              ],
+              "video_frame": [
+                {
+                  "name": "video_frame",
+                  "dest": [
+                    {
+                      "extension": "vision_tool_python"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "streamid_adapter",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "vision_tool_python",
+              "cmd": [
+                {
+                  "name": "chat_completion",
+                  "dest": [
+                    {
+                      "extension": "vllm"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "part7_Visualrecognition",
+        "auto_start": false,
+        "graph": {
+          "nodes": [
+            {
+              "type": "extension",
+              "name": "agora_rtc",
+              "addon": "agora_rtc",
+              "extension_group": "default",
+              "property": {
+                "app_id": "${env:AGORA_APP_ID}",
+                "app_certificate": "${env:AGORA_APP_CERTIFICATE|}",
+                "channel": "ten_agent_test",
+                "stream_id": 1234,
+                "remote_stream_id": 123,
+                "subscribe_audio": true,
+                "publish_audio": true,
+                "publish_data": true,
+                "enable_agora_asr": false,
+                "subscribe_video": true,
+                "subscribe_video_pix_fmt": 4
+              }
+            },
+            {
+              "type": "extension",
+              "name": "stt",
+              "addon": "azure_asr_python",
+              "extension_group": "stt",
+              "property": {
+                "key": "${env:AZURE_STT_KEY}",
+                "region": "${env:AZURE_STT_REGION}",
+                "language": "zh-CN",
+                "phrase_list": [
+                  "普源精电",
+                  "RIGOL",
+                  "示波器",
+                  "频谱仪",
+                  "带宽",
+                  "采样率",
+                  "万用表",
+                  "信号源",
+                  "电源",
+                  "MSO",
+                  "DHO",
+                  "波形",
+                  "触发",
+                  "通道",
+                  "探头",
+                  "分辨率",
+                  "存储深度",
+                  "逻辑分析仪",
+                  "矢量网络分析仪",
+                  "函数发生器"
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "llm",
+              "addon": "openai_llm2_python",
+              "extension_group": "chatgpt",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "作为普源精电（RIGOL）的资深算法工程师，你对计算机视觉技术有深入了解，能够专业地回答技术性和非技术性问题。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}",
+                "greeting": "如果说语音控制还要说话，有点累。那下面这个环节，我们不仅要解放双手，还要当一回“奇异博士”。",
+                "max_memory_length": 10
+              }
+            },
+            {
+              "type": "extension",
+              "name": "main_control",
+              "addon": "main_python",
+              "extension_group": "control",
+              "property": {
+                "greeting": "如果说语音控制还要说话，有点累。那下面这个环节，我们不仅要解放双手，还要当一回“奇异博士”。",
+                "greeting_scripts": [
+                  {
+                    "name": "解放双手",
+                    "text": "如果说语音控制还要说话，有点累。那下面这个环节，我们不仅要解放双手，还要当一回“奇异博士”。"
+                  },
+                  {
+                    "name": "隔空控物",
+                    "text": "太帅了！感谢这位朋友的配合。这用到的技术是计算机视觉（Computer Vision）中的姿态估计（Pose Estimation）。摄像头实时捕捉手部关节点（Hand Tracking），通过轻量化的神经网络（比如MediaPipe或YOLO-Pose）瞬间判断你的手势意图，再映射成控制命令。想象一下，当你在实验室满手油污，或者隔着防爆玻璃操作仪器时，这种“隔空控物”是不是既酷炫又实用？"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "message_collector",
+              "addon": "message_collector2",
+              "extension_group": "transcriber",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vision_tool_python",
+              "addon": "vision_analyze_tool_python",
+              "extension_group": "default",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "weather_tool",
+              "addon": "weatherapi_tool_python",
+              "extension_group": "default",
+              "property": {
+                "api_key": "${env:WEATHERAPI_API_KEY}"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "mcp_tool",
+              "addon": "mcp_client_python",
+              "extension_group": "default",
+              "property": {
+                "url": "http://localhost:3002/sse"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "streamid_adapter",
+              "addon": "streamid_adapter",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vllm",
+              "addon": "openai_llm2_python",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "你是一个乐于助人的中文AI助手。请始终使用中文回复用户的问题。你的回答应该简洁、准确且富有同理心。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}"
+              }
+            }
+          ],
+          "connections": [
+            {
+              "extension": "main_control",
+              "cmd": [
+                {
+                  "names": [
+                    "on_user_joined",
+                    "on_user_left"
+                  ],
+                  "source": [
+                    {
+                      "extension": "agora_rtc"
+                    }
+                  ]
+                },
+                {
+                  "names": [
+                    "tool_register"
+                  ],
+                  "source": [
+                    {
+                      "extension": "vision_tool_python"
+                    },
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                },
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "asr_result",
+                  "source": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "weather_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "mcp_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "agora_rtc",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "streamid_adapter"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "data",
+                  "source": [
+                    {
+                      "extension": "message_collector"
+                    }
+                  ]
+                }
+              ],
+              "video_frame": [
+                {
+                  "name": "video_frame",
+                  "dest": [
+                    {
+                      "extension": "vision_tool_python"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "streamid_adapter",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "vision_tool_python",
+              "cmd": [
+                {
+                  "name": "chat_completion",
+                  "dest": [
+                    {
+                      "extension": "vllm"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "part8_Consistencytesting",
+        "auto_start": false,
+        "graph": {
+          "nodes": [
+            {
+              "type": "extension",
+              "name": "agora_rtc",
+              "addon": "agora_rtc",
+              "extension_group": "default",
+              "property": {
+                "app_id": "${env:AGORA_APP_ID}",
+                "app_certificate": "${env:AGORA_APP_CERTIFICATE|}",
+                "channel": "ten_agent_test",
+                "stream_id": 1234,
+                "remote_stream_id": 123,
+                "subscribe_audio": true,
+                "publish_audio": true,
+                "publish_data": true,
+                "enable_agora_asr": false,
+                "subscribe_video": true,
+                "subscribe_video_pix_fmt": 4
+              }
+            },
+            {
+              "type": "extension",
+              "name": "stt",
+              "addon": "azure_asr_python",
+              "extension_group": "stt",
+              "property": {
+                "key": "${env:AZURE_STT_KEY}",
+                "region": "${env:AZURE_STT_REGION}",
+                "language": "zh-CN",
+                "phrase_list": [
+                  "普源精电",
+                  "RIGOL",
+                  "示波器",
+                  "频谱仪",
+                  "带宽",
+                  "采样率",
+                  "万用表",
+                  "信号源",
+                  "电源",
+                  "MSO",
+                  "DHO",
+                  "波形",
+                  "触发",
+                  "通道",
+                  "探头",
+                  "分辨率",
+                  "存储深度",
+                  "逻辑分析仪",
+                  "矢量网络分析仪",
+                  "函数发生器"
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "llm",
+              "addon": "openai_llm2_python",
+              "extension_group": "consistency_test",
+              "property": {
+                "base_url": "http://172.18.60.51:8200/v1",
+                "api_key": "sk-1234",
+                "model": "一致性测试",
+                "frequency_penalty": 0.0,
+                "max_tokens": 1024,
+                "prompt": "作为普源精电（RIGOL）的测试测量专家，你对电子测试仪器（特别是示波器）的功能和原理有深度了解，能够使用专业、简洁的口吻回答问题并给出建议。",
+                "greeting": "各位，前面的都是“单点技能”。现在，我们要把这些技能合体，迎来今晚的压轴大戏！这也是我们所有测试工程师的终极梦想——测量智能体（Measurement Agent）。",
+                "max_memory_length": 10
+              }
+            },
+            {
+              "type": "extension",
+              "name": "main_control",
+              "addon": "main_python",
+              "extension_group": "control",
+              "property": {
+                "greeting": "各位，前面的都是“单点技能”。现在，我们要把这些技能合体，迎来今晚的压轴大戏！这也是我们所有测试工程师的终极梦想——测量智能体（Measurement Agent）。",
+                "greeting_scripts": [
+                  {
+                    "name": "压轴大戏",
+                    "text": "各位，前面的都是“单点技能”。现在，我们要把这些技能合体，迎来今晚的压轴大戏！这也是我们所有测试工程师的终极梦想——测量智能体（Measurement Agent）。"
+                  },
+                  {
+                    "name": "测试环境",
+                    "text": "大家看，这是一套复杂的车载以太网一致性测试环境。以前，做完这一套测试，工程师需要配置几十个项目，跑几个小时，最后还要对着几百页的标准文档写报告。今天，我们把这一切交给AI Agent。"
+                  },
+                  {
+                    "name": "思维链",
+                    "text": "大家请看大屏幕，左边是仪器的动作，右边是AI的思维链（Chain of Thought）；"
+                  },
+                  {
+                    "name": "报告解读",
+                    "text": "测试完成！最惊人的是这一步——报告解读。Agent不仅仅给了Pass/Fail，它还在备注里写道：“建议检查线缆屏蔽层接地情况，因为在特定频段发现了共模干扰。”"
+                  },
+                  {
+                    "name": "完全体",
+                    "text": "这就是压轴技术的精髓：它不是简单的自动化脚本，它是LLM（大模型逻辑） + RAG（检索增强生成，查阅标准文档） + Tools（仪器控制工具）的完全体。它像一个有了20年经验的老专家，24小时不间断地帮我们把关质量。这，就是未来的测试！"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "message_collector",
+              "addon": "message_collector2",
+              "extension_group": "transcriber",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vision_tool_python",
+              "addon": "vision_analyze_tool_python",
+              "extension_group": "default",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "weather_tool",
+              "addon": "weatherapi_tool_python",
+              "extension_group": "default",
+              "property": {
+                "api_key": "${env:WEATHERAPI_API_KEY}"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "mcp_tool",
+              "addon": "mcp_client_python",
+              "extension_group": "default",
+              "property": {
+                "url": "http://localhost:3002/sse"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "streamid_adapter",
+              "addon": "streamid_adapter",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vllm",
+              "addon": "openai_llm2_python",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "你是一个乐于助人的中文AI助手。请始终使用中文回复用户的问题。你的回答应该简洁、准确且富有同理心。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}"
+              }
+            }
+          ],
+          "connections": [
+            {
+              "extension": "main_control",
+              "cmd": [
+                {
+                  "names": [
+                    "on_user_joined",
+                    "on_user_left"
+                  ],
+                  "source": [
+                    {
+                      "extension": "agora_rtc"
+                    }
+                  ]
+                },
+                {
+                  "names": [
+                    "tool_register"
+                  ],
+                  "source": [
+                    {
+                      "extension": "vision_tool_python"
+                    },
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                },
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "asr_result",
+                  "source": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "weather_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "mcp_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "agora_rtc",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "streamid_adapter"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "data",
+                  "source": [
+                    {
+                      "extension": "message_collector"
+                    }
+                  ]
+                }
+              ],
+              "video_frame": [
+                {
+                  "name": "video_frame",
+                  "dest": [
+                    {
+                      "extension": "vision_tool_python"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "streamid_adapter",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "vision_tool_python",
+              "cmd": [
+                {
+                  "name": "chat_completion",
+                  "dest": [
+                    {
+                      "extension": "vllm"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "part9_endding",
+        "auto_start": false,
+        "graph": {
+          "nodes": [
+            {
+              "type": "extension",
+              "name": "agora_rtc",
+              "addon": "agora_rtc",
+              "extension_group": "default",
+              "property": {
+                "app_id": "${env:AGORA_APP_ID}",
+                "app_certificate": "${env:AGORA_APP_CERTIFICATE|}",
+                "channel": "ten_agent_test",
+                "stream_id": 1234,
+                "remote_stream_id": 123,
+                "subscribe_audio": true,
+                "publish_audio": true,
+                "publish_data": true,
+                "enable_agora_asr": false,
+                "subscribe_video": true,
+                "subscribe_video_pix_fmt": 4
+              }
+            },
+            {
+              "type": "extension",
+              "name": "stt",
+              "addon": "azure_asr_python",
+              "extension_group": "stt",
+              "property": {
+                "key": "${env:AZURE_STT_KEY}",
+                "region": "${env:AZURE_STT_REGION}",
+                "language": "zh-CN",
+                "phrase_list": [
+                  "普源精电",
+                  "RIGOL",
+                  "示波器",
+                  "频谱仪",
+                  "带宽",
+                  "采样率",
+                  "万用表",
+                  "信号源",
+                  "电源",
+                  "MSO",
+                  "DHO",
+                  "波形",
+                  "触发",
+                  "通道",
+                  "探头",
+                  "分辨率",
+                  "存储深度",
+                  "逻辑分析仪",
+                  "矢量网络分析仪",
+                  "函数发生器"
+                ]
+              }
+            },
+            {
+              "type": "extension",
+              "name": "llm",
+              "addon": "openai_llm2_python",
+              "extension_group": "chatgpt",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "你代表普源精电（RIGOL），作为一个活泼轻快的主持人，负责晚会结尾环节的结束语和简单问题回应。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}",
+                "greeting": "朋友们，今晚我们回顾了2025，玩了音乐，辩了真理，秀了手势，最后见证了测量智能体的强大。从生成式AI的浪漫，到视觉识别的敏捷，再到决策智能体的严谨。AI技术已经嵌入到了我们电子测试测量的每一个环节。有人问，AI来了，我们去哪？通过今晚的演示，我想答案很清楚：AI负责处理那些重复的、海量的、复杂的各种标准和数据；而我们，负责定义问题、负责创新、负责欣赏音乐、负责享受生活。让我们举起手中的酒杯（或饮料），为更智能的2026，为在座每一位即将驾驭AI的超级工程师，干杯！谢谢大家！",
+                "max_memory_length": 10
+              }
+            },
+            {
+              "type": "extension",
+              "name": "main_control",
+              "addon": "main_python",
+              "extension_group": "control",
+              "property": {
+                "greeting": "朋友们，今晚我们回顾了2025，玩了音乐，辩了真理，秀了手势，最后见证了测量智能体的强大。从生成式AI的浪漫，到视觉识别的敏捷，再到决策智能体的严谨。AI技术已经嵌入到了我们电子测试测量的每一个环节。有人问，AI来了，我们去哪？通过今晚的演示，我想答案很清楚：AI负责处理那些重复的、海量的、复杂的各种标准和数据；而我们，负责定义问题、负责创新、负责欣赏音乐、负责享受生活。让我们举起手中的酒杯（或饮料），为更智能的2026，为在座每一位即将驾驭AI的超级工程师，干杯！谢谢大家！"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "message_collector",
+              "addon": "message_collector2",
+              "extension_group": "transcriber",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vision_tool_python",
+              "addon": "vision_analyze_tool_python",
+              "extension_group": "default",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "weather_tool",
+              "addon": "weatherapi_tool_python",
+              "extension_group": "default",
+              "property": {
+                "api_key": "${env:WEATHERAPI_API_KEY}"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "mcp_tool",
+              "addon": "mcp_client_python",
+              "extension_group": "default",
+              "property": {
+                "url": "http://localhost:3002/sse"
+              }
+            },
+            {
+              "type": "extension",
+              "name": "streamid_adapter",
+              "addon": "streamid_adapter",
+              "property": {}
+            },
+            {
+              "type": "extension",
+              "name": "vllm",
+              "addon": "openai_llm2_python",
+              "property": {
+                "base_url": "https://api.openai.com/v1",
+                "api_key": "${env:OPENAI_API_KEY}",
+                "frequency_penalty": 0.9,
+                "model": "${env:OPENAI_MODEL}",
+                "max_tokens": 512,
+                "prompt": "你是一个乐于助人的中文AI助手。请始终使用中文回复用户的问题。你的回答应该简洁、准确且富有同理心。",
+                "proxy_url": "${env:OPENAI_PROXY_URL|}"
+              }
+            }
+          ],
+          "connections": [
+            {
+              "extension": "main_control",
+              "cmd": [
+                {
+                  "names": [
+                    "on_user_joined",
+                    "on_user_left"
+                  ],
+                  "source": [
+                    {
+                      "extension": "agora_rtc"
+                    }
+                  ]
+                },
+                {
+                  "names": [
+                    "tool_register"
+                  ],
+                  "source": [
+                    {
+                      "extension": "vision_tool_python"
+                    },
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                },
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "weather_tool"
+                    },
+                    {
+                      "extension": "mcp_tool"
+                    }
+                  ]
+                }
+              ],
+              "data": [
+                {
+                  "name": "asr_result",
+                  "source": [
+                    {
+                      "extension": "stt"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "weather_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "mcp_tool",
+              "cmd": [
+                {
+                  "name": "tool_call",
+                  "dest": [
+                    {
+                      "extension": "main_control"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "extension": "agora_rtc",
+              "audio_frame": [
+                {
+                  "name": "pcm_frame",
+                  "dest": [
+                    {
+                      "extension": "streamid_adapter"
                     }
                   ]
                 }

@@ -136,9 +136,9 @@ class AzureASRExtension(AsyncASRBaseExtension):
         )
         audio_config = speechsdk.audio.AudioConfig(stream=self.stream)
 
-        # Set the silence timeout to 100ms by default.
+        # Set the silence timeout to 300ms by default.
         speech_config.set_property(
-            speechsdk.PropertyId.Speech_SegmentationSilenceTimeoutMs, "100"
+            speechsdk.PropertyId.Speech_SegmentationSilenceTimeoutMs, "500"
         )
 
         # Dump the Azure SDK log to the dump path if dump is enabled.

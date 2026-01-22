@@ -77,7 +77,10 @@ const AuthInitializer = (props: AuthInitializerProps) => {
       if (!graph) {
         return;
       }
-      dispatch(fetchGraphDetails(graph));
+      // In production mode, fetchGraphDetails might fail or return nothing.
+      // We rely on GREETING_SCRIPTS_MAP fallback in Action.tsx for scripts.
+      // But we still try to fetch details if possible.
+      dispatch(fetchGraphDetails(graph.graph_id));
     }
   }, [selectedGraphId, graphList, dispatch]); // Automatically fetch details when `selectedGraphId` changes
 

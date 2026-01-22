@@ -26,4 +26,4 @@ tasks:
     desc: check if both services are running
     cmds:
       - curl -f http://localhost:8080/health || echo "API server not responding"
-      - curl -f http://localhost:3000 || echo "Frontend not responding"
+      - curl -f http://localhost:8090 || echo "Frontend not responding"
