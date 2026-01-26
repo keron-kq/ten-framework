@@ -121,12 +121,14 @@ export default function Home() {
             
             if (textItem.text) {
                     // CRITICAL FIX 2: Detect if a new response has started (current text is shorter than what we've tracked)
-                    // if (textItem.text.length < lastSentTextRef.current.length) {
-                    //     console.log("[page.tsx] 🔄 New response sequence detected (length mismatch), resetting state");
-                    //     isFirstChunkRef.current = true;
-                    //     lastSentTextRef.current = "";
-                    //     textBufferRef.current = "";
-                    // }
+                    const currentText = textItem.text || "";
+                    
+                    if (currentText.length < lastSentTextRef.current.length) {
+                        console.log("[page.tsx] 🔄 New response sequence detected (length mismatch), resetting state");
+                        isFirstChunkRef.current = true;
+                        lastSentTextRef.current = "";
+                        textBufferRef.current = "";
+                    }
 
                     // CRITICAL FIX: If lastSentText is empty but isFirstChunk is false, force reset
                     if (lastSentTextRef.current === "" && !isFirstChunkRef.current) {
@@ -135,7 +137,7 @@ export default function Home() {
                     }
                     
                     // Calculate the NEW part (diff)
-                    const currentFullText = textItem.text;
+                    const currentFullText = currentText;
                     const newContent = currentFullText.substring(lastSentTextRef.current.length);
                     const isEnd = textItem.isFinal || false;
                     
