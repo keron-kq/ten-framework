@@ -109,15 +109,6 @@
             },
             {
               "type": "extension",
-              "name": "mcp_tool",
-              "addon": "mcp_client_python",
-              "extension_group": "default",
-              "property": {
-                "url": "http://localhost:3002/sse"
-              }
-            },
-            {
-              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -162,9 +153,6 @@
                     },
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 },
@@ -173,9 +161,6 @@
                   "dest": [
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -193,19 +178,6 @@
             },
             {
               "extension": "weather_tool",
-              "cmd": [
-                {
-                  "name": "tool_call",
-                  "dest": [
-                    {
-                      "extension": "main_control"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "extension": "mcp_tool",
               "cmd": [
                 {
                   "name": "tool_call",
@@ -397,15 +369,6 @@
             },
             {
               "type": "extension",
-              "name": "mcp_tool",
-              "addon": "mcp_client_python",
-              "extension_group": "default",
-              "property": {
-                "url": "http://localhost:3002/sse"
-              }
-            },
-            {
-              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -450,9 +413,6 @@
                     },
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 },
@@ -461,9 +421,6 @@
                   "dest": [
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -481,19 +438,6 @@
             },
             {
               "extension": "weather_tool",
-              "cmd": [
-                {
-                  "name": "tool_call",
-                  "dest": [
-                    {
-                      "extension": "main_control"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "extension": "mcp_tool",
               "cmd": [
                 {
                   "name": "tool_call",
@@ -685,15 +629,6 @@
             },
             {
               "type": "extension",
-              "name": "mcp_tool",
-              "addon": "mcp_client_python",
-              "extension_group": "default",
-              "property": {
-                "url": "http://localhost:3002/sse"
-              }
-            },
-            {
-              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -738,9 +673,6 @@
                     },
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 },
@@ -749,9 +681,6 @@
                   "dest": [
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -769,19 +698,6 @@
             },
             {
               "extension": "weather_tool",
-              "cmd": [
-                {
-                  "name": "tool_call",
-                  "dest": [
-                    {
-                      "extension": "main_control"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "extension": "mcp_tool",
               "cmd": [
                 {
                   "name": "tool_call",
@@ -973,15 +889,6 @@
             },
             {
               "type": "extension",
-              "name": "mcp_tool",
-              "addon": "mcp_client_python",
-              "extension_group": "default",
-              "property": {
-                "url": "http://localhost:3002/sse"
-              }
-            },
-            {
-              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -1026,9 +933,6 @@
                     },
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 },
@@ -1037,9 +941,6 @@
                   "dest": [
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -1057,19 +958,6 @@
             },
             {
               "extension": "weather_tool",
-              "cmd": [
-                {
-                  "name": "tool_call",
-                  "dest": [
-                    {
-                      "extension": "main_control"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "extension": "mcp_tool",
               "cmd": [
                 {
                   "name": "tool_call",
@@ -1260,15 +1148,6 @@
             },
             {
               "type": "extension",
-              "name": "mcp_tool",
-              "addon": "mcp_client_python",
-              "extension_group": "default",
-              "property": {
-                "url": "http://localhost:3002/sse"
-              }
-            },
-            {
-              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -1313,9 +1192,6 @@
                     },
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 },
@@ -1324,9 +1200,6 @@
                   "dest": [
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -1344,19 +1217,6 @@
             },
             {
               "extension": "weather_tool",
-              "cmd": [
-                {
-                  "name": "tool_call",
-                  "dest": [
-                    {
-                      "extension": "main_control"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "extension": "mcp_tool",
               "cmd": [
                 {
                   "name": "tool_call",
@@ -1568,15 +1428,6 @@
             },
             {
               "type": "extension",
-              "name": "mcp_tool",
-              "addon": "mcp_client_python",
-              "extension_group": "default",
-              "property": {
-                "url": "http://localhost:3002/sse"
-              }
-            },
-            {
-              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -1621,9 +1472,6 @@
                     },
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 },
@@ -1632,9 +1480,6 @@
                   "dest": [
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -1652,19 +1497,6 @@
             },
             {
               "extension": "weather_tool",
-              "cmd": [
-                {
-                  "name": "tool_call",
-                  "dest": [
-                    {
-                      "extension": "main_control"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "extension": "mcp_tool",
               "cmd": [
                 {
                   "name": "tool_call",
@@ -1856,15 +1688,6 @@
             },
             {
               "type": "extension",
-              "name": "mcp_tool",
-              "addon": "mcp_client_python",
-              "extension_group": "default",
-              "property": {
-                "url": "http://localhost:3002/sse"
-              }
-            },
-            {
-              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -1909,9 +1732,6 @@
                     },
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 },
@@ -1920,9 +1740,6 @@
                   "dest": [
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -1940,19 +1757,6 @@
             },
             {
               "extension": "weather_tool",
-              "cmd": [
-                {
-                  "name": "tool_call",
-                  "dest": [
-                    {
-                      "extension": "main_control"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "extension": "mcp_tool",
               "cmd": [
                 {
                   "name": "tool_call",
@@ -2155,15 +1959,6 @@
             },
             {
               "type": "extension",
-              "name": "mcp_tool",
-              "addon": "mcp_client_python",
-              "extension_group": "default",
-              "property": {
-                "url": "http://localhost:3002/sse"
-              }
-            },
-            {
-              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -2208,9 +2003,6 @@
                     },
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 },
@@ -2219,9 +2011,6 @@
                   "dest": [
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -2239,19 +2028,6 @@
             },
             {
               "extension": "weather_tool",
-              "cmd": [
-                {
-                  "name": "tool_call",
-                  "dest": [
-                    {
-                      "extension": "main_control"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "extension": "mcp_tool",
               "cmd": [
                 {
                   "name": "tool_call",
@@ -2433,15 +2209,6 @@
             },
             {
               "type": "extension",
-              "name": "mcp_tool",
-              "addon": "mcp_client_python",
-              "extension_group": "default",
-              "property": {
-                "url": "http://localhost:3002/sse"
-              }
-            },
-            {
-              "type": "extension",
               "name": "streamid_adapter",
               "addon": "streamid_adapter",
               "property": {}
@@ -2486,9 +2253,6 @@
                     },
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 },
@@ -2497,9 +2261,6 @@
                   "dest": [
                     {
                       "extension": "weather_tool"
-                    },
-                    {
-                      "extension": "mcp_tool"
                     }
                   ]
                 }
@@ -2517,19 +2278,6 @@
             },
             {
               "extension": "weather_tool",
-              "cmd": [
-                {
-                  "name": "tool_call",
-                  "dest": [
-                    {
-                      "extension": "main_control"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "extension": "mcp_tool",
               "cmd": [
                 {
                   "name": "tool_call",
