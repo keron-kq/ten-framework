@@ -368,9 +368,9 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
         <div className="absolute top-4 left-4 z-20 pointer-events-none opacity-80">
             <div className="flex items-center gap-2">
                 {/* RIGOL Logo Placeholder */}
-                <div className="h-8 flex items-center">
-                    <span className="text-xl font-bold tracking-widest text-[#FFCC00]">RIGOL</span>
-                    <span className="ml-2 text-xs text-white/70 border-l border-white/30 pl-2">AI FORUM 2026</span>
+                <div className="h-10 flex items-center">
+                    <span className="text-3xl font-bold tracking-widest text-[#FFCC00]">RIGOL</span>
+                    <span className="ml-3 text-sm text-white/70 border-l border-white/30 pl-3">AI FORUM 2026</span>
                 </div>
             </div>
         </div>
