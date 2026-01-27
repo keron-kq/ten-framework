@@ -32,6 +32,12 @@ export default function Home() {
   const mobileActiveTab = useAppSelector(
     (state) => state.global.mobileActiveTab
   );
+  const selectedGraphId = useAppSelector(
+    (state) => state.global.selectedGraphId
+  );
+  const agentConnected = useAppSelector(
+    (state) => state.global.agentConnected
+  );
   // ... existing selectors ...
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const [isChatOpen, setIsChatOpen] = React.useState(true); // State for chat area collapse
@@ -114,10 +120,12 @@ export default function Home() {
             // Reset interrupt flag when Agent starts responding
             if (isFirstChunkRef.current) {
                 isInterruptedRef.current = false;
+                // CRITICAL: Also reset DH speaking state to ensure VAD works correctly
+                isDigitalHumanSpeakingRef.current = false;
+                const { rtcManager } = require("../manager/rtc/rtc");
+                rtcManager.setDigitalHumanSpeaking(false);
             }
 
-            console.log("[page.tsx] ✅ Agent message confirmed");
-            
             // Check if Digital Human is connected and ready
             // CRITICAL FIX: In projection mode, local DH is disconnected, so we shouldn't block sending!
             // We use the Ref here to be safe inside closure
@@ -126,17 +134,26 @@ export default function Home() {
                 return;
             }
             
-            console.log(`[page.tsx] ✅ Processing Agent message (Projection: ${isProjectionModeRef.current})`);
-            
             if (textItem.text) {
                     // CRITICAL FIX 2: Detect if a new response has started (current text is shorter than what we've tracked)
                     const currentText = textItem.text || "";
                     
                     if (currentText.length < lastSentTextRef.current.length) {
-                        console.log("[page.tsx] 🔄 New response sequence detected (length mismatch), resetting state");
-                        isFirstChunkRef.current = true;
-                        lastSentTextRef.current = "";
-                        textBufferRef.current = "";
+                        // Text got shorter - this means LLM started a NEW response
+                        // Only reset if the difference is significant (not just minor fluctuation)
+                        const diff = lastSentTextRef.current.length - currentText.length;
+                        
+                        if (diff > 10 || currentText.length < 10) {
+                            // Significant reset - new response
+                            console.log("[page.tsx] 🔄 New response detected (large decrease), resetting");
+                            isFirstChunkRef.current = true;
+                            lastSentTextRef.current = "";
+                            textBufferRef.current = "";
+                        } else {
+                            // Minor fluctuation - ignore to prevent duplicate playback
+                            console.log("[page.tsx] ⏭️ Minor text fluctuation, ignoring");
+                            return;
+                        }
                     }
 
                     // CRITICAL FIX: If lastSentText is empty but isFirstChunk is false, force reset
@@ -156,18 +173,26 @@ export default function Home() {
                     
                     // Add new content to buffer
                     textBufferRef.current += newContent;
+                    
+                    console.log(`[page.tsx] 📝 Text processing:`, {
+                        currentLength: currentFullText.length,
+                        lastSentLength: lastSentTextRef.current.length,
+                        newContent: newContent,
+                        bufferNow: textBufferRef.current,
+                        isFirstChunk: isFirstChunkRef.current
+                    });
+                    
                     lastSentTextRef.current = currentFullText;
                     
-                    console.log(`[page.tsx] Buffer updated: "${textBufferRef.current}" (length: ${textBufferRef.current.length})`);
-                    
                     // Determine if we should send now
+                    // Optimized strategy: first chunk sends faster (3 chars), subsequent chunks maintain balance (6 chars)
                     const shouldSend = 
-                        textBufferRef.current.length >= CHUNK_SIZE || // Buffer full
+                        (isFirstChunkRef.current && textBufferRef.current.length >= 3) || // First chunk: 3 chars for fast response
+                        (!isFirstChunkRef.current && textBufferRef.current.length >= 6) || // Subsequent: 6 chars for balance
                         /[，。！？；：、,\.!?;:]/.test(textBufferRef.current) || // Contains punctuation
                         isEnd; // Final chunk - ALWAYS send if it's the end
                     
                     if (!shouldSend) {
-                        console.log("[page.tsx] Buffer not ready, waiting for more content...");
                         return;
                     }
                     
@@ -175,7 +200,12 @@ export default function Home() {
                     const textToSend = textBufferRef.current;
                     const isStart = isFirstChunkRef.current;
                     
-                    console.log(`[page.tsx] 📤 Sending buffered text: "${textToSend}"`);
+                    console.log(`[page.tsx] 📤 SENDING:`, {
+                        text: textToSend,
+                        isStart: isStart,
+                        isEnd: isEnd,
+                        textLength: textToSend.length
+                    });
                     
                     // Call speak with buffered content
                     if (!isProjectionModeRef.current) {
@@ -246,11 +276,38 @@ export default function Home() {
   React.useEffect(() => {
     const { rtcManager } = require("../manager/rtc/rtc");
     if (vadEnabled) {
-      rtcManager.enableVAD(15, 2);
+      rtcManager.enableVAD(vadThreshold, vadConsecutive);
     } else {
       rtcManager.disableVAD();
     }
-  }, [vadEnabled]);
+  }, [vadEnabled, vadThreshold, vadConsecutive]);
+
+  // P1 Optimization: Reset all streaming states when graph switches
+  React.useEffect(() => {
+    console.log("[page.tsx] 🔄 Graph switched, resetting all states");
+    isFirstChunkRef.current = true;
+    lastSentTextRef.current = "";
+    textBufferRef.current = "";
+    isInterruptedRef.current = false;
+    isDigitalHumanSpeakingRef.current = false;
+    
+    const { rtcManager } = require("../manager/rtc/rtc");
+    rtcManager.setDigitalHumanSpeaking(false);
+  }, [selectedGraphId]);
+
+  // P1 Optimization: Preheat digital human SDK when connected
+  React.useEffect(() => {
+    if (agentConnected && !isProjectionMode && digitalHumanRef.current?.isConnected()) {
+      // Delay 500ms to ensure DH is fully ready
+      const timer = setTimeout(() => {
+        console.log("[page.tsx] 🔥 Preheating digital human SDK");
+        // Speak empty string to warm up the SDK pipeline
+        digitalHumanRef.current?.speak(" ", true, true);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [agentConnected, isProjectionMode]);
 
   const onRemoteUserChanged = (user: IRtcUser) => {
     // ... existing logic ...
@@ -273,6 +330,12 @@ export default function Home() {
 
   const handleSpeak = (text: string) => {
     console.log(`[page.tsx] 🎬 Manual speak triggered: "${text.substring(0, 20)}..."`);
+    
+    // CRITICAL: Reset all streaming states before greeting playback
+    isFirstChunkRef.current = true;
+    lastSentTextRef.current = "";
+    textBufferRef.current = "";
+    isInterruptedRef.current = false;
     
     // Add to chat history as an Agent message using dispatch hook
     dispatch(addChatItem({
