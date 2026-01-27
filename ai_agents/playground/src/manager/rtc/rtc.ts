@@ -33,12 +33,23 @@ export class RtcManager extends AGEventEmitter<RtcEvents> {
   token: string | null = null;
   userId: number | null = null;
 
+  // VAD properties - minimal implementation
+  private vadEnabled = false;
+  private volumeThreshold = 15;
+  private consecutiveRequired = 2;
+  private consecutiveCount = 0;
+  private isDigitalHumanSpeaking = false;
+
   constructor() {
     super();
     this._joined = false;
     this.localTracks = {};
-    this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-    this._listenRtcEvents();
+    if (typeof window !== 'undefined') {
+      this.client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+      this._listenRtcEvents();
+    } else {
+      this.client = {} as IAgoraRTCClient;
+    }
   }
 
   async join({ channel, userId }: { channel: string; userId: number }) {
@@ -318,6 +329,63 @@ export class RtcManager extends AGEventEmitter<RtcEvents> {
     this.localTracks = {};
     this._joined = false;
   }
+
+  // ========== VAD Methods (Minimal Implementation) ==========
+  
+  enableVAD(threshold: number = 15, consecutive: number = 2) {
+    this.volumeThreshold = threshold;
+    this.consecutiveRequired = consecutive;
+    
+    if (!this.client || typeof this.client.enableAudioVolumeIndicator !== 'function') {
+      return;
+    }
+
+    this.client.enableAudioVolumeIndicator();
+    this.client.on("volume-indicator", (volumes) => {
+      volumes.forEach((volume) => {
+        if (volume.uid === 0) {
+          this._detectUserSpeaking(volume.level);
+        }
+      });
+    });
+    
+    this.vadEnabled = true;
+  }
+
+  disableVAD() {
+    this.vadEnabled = false;
+    this.consecutiveCount = 0;
+  }
+
+  setDigitalHumanSpeaking(isSpeaking: boolean) {
+    this.isDigitalHumanSpeaking = isSpeaking;
+  }
+
+  updateVADThreshold(threshold: number) {
+    this.volumeThreshold = threshold;
+  }
+
+  updateVADConsecutive(consecutive: number) {
+    this.consecutiveRequired = consecutive;
+  }
+
+  private _detectUserSpeaking(level: number) {
+    if (!this.vadEnabled) return;
+    
+    // CRITICAL: Only detect when digital human is SPEAKING (something to interrupt)
+    // When DH is silent, user is just talking normally - no need to interrupt
+    if (!this.isDigitalHumanSpeaking) return;
+
+    if (level > this.volumeThreshold) {
+      this.consecutiveCount++;
+      if (this.consecutiveCount >= this.consecutiveRequired) {
+        this.emit("userSpeaking");
+        this.consecutiveCount = 0;
+      }
+    } else {
+      this.consecutiveCount = 0;
+    }
+  }
 }
 
-export const rtcManager = new RtcManager();
+export const rtcManager = typeof window !== 'undefined' ? new RtcManager() : ({} as RtcManager);

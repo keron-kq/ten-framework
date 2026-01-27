@@ -23,6 +23,7 @@ export interface RtcEvents {
   localTracksChanged: (tracks: IUserTracks) => void;
   networkQuality: (quality: NetworkQuality) => void;
   textChanged: (text: IChatItem) => void;
+  userSpeaking: () => void;
 }
 
 export interface IUserTracks {

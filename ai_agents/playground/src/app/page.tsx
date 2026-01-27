@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import ActionBar from "@/components/Layout/Action";
 
 import DigitalHuman, { DigitalHumanRef } from "@/components/DigitalHuman";
-import { type IChatItem, EMessageType } from "@/types"; // Import types for event handling
+import { type IChatItem, EMessageType, EMessageDataType } from "@/types"; // Import types for event handling
 import { addChatItem } from "@/store/reducers/global"; // Import action creator
 import { useAppDispatch } from "@/common"; // Ensure useAppDispatch is imported
 
@@ -45,6 +45,10 @@ export default function Home() {
   const textBufferRef = React.useRef<string>(""); // Buffer for accumulating text before sending
   const isInterruptedRef = React.useRef<boolean>(false); // Track if we have already interrupted the current turn
   const CHUNK_SIZE = 6; // Balanced chunk size for fluency and latency
+  const [vadEnabled, setVadEnabled] = React.useState(true); // VAD enabled by default
+  const [vadThreshold, setVadThreshold] = React.useState(15);
+  const [vadConsecutive, setVadConsecutive] = React.useState(2);
+  const isDigitalHumanSpeakingRef = React.useRef<boolean>(false);
 
   React.useEffect(() => {
     // Initialize BroadcastChannel
@@ -72,6 +76,11 @@ export default function Home() {
         // Reset streaming state when user starts a new conversation
         if (textItem.type === EMessageType.USER) {
             console.log("[page.tsx] ✅ User message detected");
+            
+            // Reset DH speaking state
+            isDigitalHumanSpeakingRef.current = false;
+            const { rtcManager } = require("../manager/rtc/rtc");
+            rtcManager.setDigitalHumanSpeaking(false);
             
             // Only interrupt ONCE per user turn to avoid spamming the SDK
             if (!isInterruptedRef.current) {
@@ -170,13 +179,25 @@ export default function Home() {
                     
                     // Call speak with buffered content
                     if (!isProjectionModeRef.current) {
-                        digitalHumanRef.current.speak(textToSend, isStart, isEnd);
+                        digitalHumanRef.current?.speak(textToSend, isStart, isEnd);
                     } else {
                         console.log(`[page.tsx] 📡 Sending SPEAK command to projection: "${textToSend}"`);
                         broadcastChannelRef.current?.postMessage({
                             type: "speak",
                             payload: { text: textToSend, isStart, isEnd }
                         });
+                    }
+                    
+                    // Update DH speaking state for VAD
+                    if (isStart) {
+                        isDigitalHumanSpeakingRef.current = true;
+                        const { rtcManager } = require("../manager/rtc/rtc");
+                        rtcManager.setDigitalHumanSpeaking(true);
+                    }
+                    if (isEnd) {
+                        isDigitalHumanSpeakingRef.current = false;
+                        const { rtcManager } = require("../manager/rtc/rtc");
+                        rtcManager.setDigitalHumanSpeaking(false);
                     }
                     
                     // Clear buffer and update flags
@@ -197,23 +218,57 @@ export default function Home() {
             }
     };
 
+    const onUserSpeaking = () => {
+      if (!isProjectionModeRef.current && digitalHumanRef.current?.isConnected() && !isInterruptedRef.current) {
+        digitalHumanRef.current.stopSpeaking();
+        isDigitalHumanSpeakingRef.current = false;
+        rtcManager.setDigitalHumanSpeaking(false);
+        isInterruptedRef.current = true;
+        setTimeout(() => { isInterruptedRef.current = false; }, 200);
+      }
+    };
+
     rtcManager.on("remoteUserChanged", onRemoteUserChanged);
-    rtcManager.on("textChanged", onTextChanged); // Add listener
+    rtcManager.on("textChanged", onTextChanged);
+    rtcManager.on("userSpeaking", onUserSpeaking);
     
     console.log("[page.tsx] ✅ Event listeners attached");
 
     return () => {
       console.log("[page.tsx] 🔴 Removing event listeners (cleanup)");
       rtcManager.off("remoteUserChanged", onRemoteUserChanged);
-      rtcManager.off("textChanged", onTextChanged); // Remove listener
+      rtcManager.off("textChanged", onTextChanged);
+      rtcManager.off("userSpeaking", onUserSpeaking);
     };
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
+
+  // Enable/disable VAD
+  React.useEffect(() => {
+    const { rtcManager } = require("../manager/rtc/rtc");
+    if (vadEnabled) {
+      rtcManager.enableVAD(15, 2);
+    } else {
+      rtcManager.disableVAD();
+    }
+  }, [vadEnabled]);
 
   const onRemoteUserChanged = (user: IRtcUser) => {
     // ... existing logic ...
     if (user.audioTrack) {
       setRemoteUser(user);
     }
+  };
+
+  const handleVadThresholdChange = (threshold: number) => {
+    setVadThreshold(threshold);
+    const { rtcManager } = require("../manager/rtc/rtc");
+    rtcManager.updateVADThreshold(threshold);
+  };
+
+  const handleVadConsecutiveChange = (consecutive: number) => {
+    setVadConsecutive(consecutive);
+    const { rtcManager } = require("../manager/rtc/rtc");
+    rtcManager.updateVADConsecutive(consecutive);
   };
 
   const handleSpeak = (text: string) => {
@@ -223,10 +278,22 @@ export default function Home() {
     dispatch(addChatItem({
         userId: "agent",
         text: text,
+        data_type: EMessageDataType.TEXT,
         type: EMessageType.AGENT,
         isFinal: true,
         time: Date.now()
     }));
+
+    // Update DH speaking state
+    isDigitalHumanSpeakingRef.current = true;
+    const { rtcManager } = require("../manager/rtc/rtc");
+    rtcManager.setDigitalHumanSpeaking(true);
+    
+    const estimatedDuration = (text.length / 4 + 1) * 1000;
+    setTimeout(() => {
+      isDigitalHumanSpeakingRef.current = false;
+      rtcManager.setDigitalHumanSpeaking(false);
+    }, estimatedDuration);
 
     if (isProjectionMode) {
         console.log("[page.tsx] 📡 Sending SPEAK command to projection");
@@ -250,7 +317,15 @@ export default function Home() {
         
         {/* Action Bar (Connect Button, etc) - Restored */}
         <div className="border-b border-[#2a2a2a] bg-[#181a1d]">
-            <ActionBar onSpeak={handleSpeak} />
+            <ActionBar 
+              onSpeak={handleSpeak}
+              vadEnabled={vadEnabled}
+              onVadToggle={setVadEnabled}
+              vadThreshold={vadThreshold}
+              vadConsecutive={vadConsecutive}
+              onVadThresholdChange={handleVadThresholdChange}
+              onVadConsecutiveChange={handleVadConsecutiveChange}
+            />
         </div>
 
         {/* Main Content Area */}

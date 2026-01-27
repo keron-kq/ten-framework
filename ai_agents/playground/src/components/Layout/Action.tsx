@@ -21,11 +21,25 @@ import { cn } from "@/lib/utils";
 import { setAgentConnected, setMobileActiveTab } from "@/store/reducers/global";
 import { TrulienceCfgSheet } from "../Chat/ChatCfgTrulienceSetting";
 import { GREETING_SCRIPTS_MAP } from "@/data/greetingScripts";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 let intervalId: NodeJS.Timeout | null = null;
 
-export default function ActionBar(props: { className?: string; onSpeak?: (text: string) => void }) {
-  const { className, onSpeak } = props;
+export default function ActionBar(props: { 
+  className?: string; 
+  onSpeak?: (text: string) => void;
+  vadEnabled?: boolean;
+  onVadToggle?: (enabled: boolean) => void;
+  vadThreshold?: number;
+  vadConsecutive?: number;
+  onVadThresholdChange?: (threshold: number) => void;
+  onVadConsecutiveChange?: (consecutive: number) => void;
+}) {
+  const { className, onSpeak, vadEnabled = true, onVadToggle, vadThreshold = 15, vadConsecutive = 2, onVadThresholdChange, onVadConsecutiveChange } = props;
   const dispatch = useAppDispatch();
   const agentConnected = useAppSelector((state) => state.global.agentConnected);
   const channel = useAppSelector((state) => state.global.options.channel);
@@ -182,6 +196,124 @@ export default function ActionBar(props: { className?: string; onSpeak?: (text: 
 
           {/* -- Graph Select Part */}
           <div className="mt-2 flex w-full items-center justify-between gap-2 md:mt-0 md:w-auto md:flex-wrap">
+            {/* VAD Control */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-10 min-w-[120px]",
+                    vadEnabled ? "border-green-500 text-green-500" : "border-gray-500 text-gray-400"
+                  )}
+                >
+                  {vadEnabled ? "✅ 快速打断" : "默认打断"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 bg-[#1a1a1a] border-[#333]">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-white">快速打断设置</span>
+                    <Button
+                      size="sm"
+                      variant={vadEnabled ? "default" : "outline"}
+                      onClick={() => onVadToggle?.(!vadEnabled)}
+                      className="h-7 text-xs"
+                    >
+                      {vadEnabled ? "已启用" : "已禁用"}
+                    </Button>
+                  </div>
+
+                  {/* Threshold */}
+                  <div>
+                    <div className="flex justify-between text-xs text-gray-400 mb-2">
+                      <span>音量阈值</span>
+                      <span className="text-white font-mono">{vadThreshold}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="50"
+                      value={vadThreshold}
+                      onChange={(e) => onVadThresholdChange?.(parseInt(e.target.value))}
+                      className="w-full h-2 bg-[#333] rounded-lg"
+                      disabled={!vadEnabled}
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      {vadThreshold < 12 && "非常灵敏"}
+                      {vadThreshold >= 12 && vadThreshold <= 18 && "平衡推荐"}
+                      {vadThreshold > 18 && "保守抗干扰"}
+                    </div>
+                  </div>
+
+                  {/* Consecutive */}
+                  <div>
+                    <div className="flex justify-between text-xs text-gray-400 mb-2">
+                      <span>连续检测次数</span>
+                      <span className="text-white font-mono">{vadConsecutive}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4].map((val) => (
+                        <button
+                          key={val}
+                          onClick={() => onVadConsecutiveChange?.(val)}
+                          className={cn(
+                            "flex-1 py-1 rounded text-xs transition-colors",
+                            vadConsecutive === val
+                              ? "bg-green-600 text-white"
+                              : "bg-[#333] text-gray-400 hover:bg-[#444]"
+                          )}
+                          disabled={!vadEnabled}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      预估延迟: ~{vadConsecutive * 200}ms
+                    </div>
+                  </div>
+
+                  {/* Presets */}
+                  <div className="pt-3 border-t border-[#333]">
+                    <div className="text-xs text-gray-400 mb-2">快速预设:</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={() => {
+                          onVadThresholdChange?.(12);
+                          onVadConsecutiveChange?.(3);
+                        }}
+                        className="px-2 py-1 bg-[#333] hover:bg-[#444] rounded text-xs text-white disabled:opacity-50"
+                        disabled={!vadEnabled}
+                      >
+                        灵敏
+                      </button>
+                      <button
+                        onClick={() => {
+                          onVadThresholdChange?.(15);
+                          onVadConsecutiveChange?.(2);
+                        }}
+                        className="px-2 py-1 bg-[#333] hover:bg-[#444] rounded text-xs text-white disabled:opacity-50"
+                        disabled={!vadEnabled}
+                      >
+                        平衡⭐
+                      </button>
+                      <button
+                        onClick={() => {
+                          onVadThresholdChange?.(20);
+                          onVadConsecutiveChange?.(2);
+                        }}
+                        className="px-2 py-1 bg-[#333] hover:bg-[#444] rounded text-xs text-white disabled:opacity-50"
+                        disabled={!vadEnabled}
+                      >
+                        保守
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
             <RemoteGraphSelect />
             
             {/* Greeting Scripts Buttons */}
