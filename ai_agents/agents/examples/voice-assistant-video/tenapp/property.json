@@ -1377,7 +1377,7 @@
                 "base_url": "${env:RIGOL_BASE_URL|http://172.18.60.51:8102/v1}",
                 "api_key": "${env:RIGOL_API_KEY|sk-1234}",
                 "model": "${env:RIGOL_MODEL|示波器_agent}",
-                "extra_headers": "{\"X-Mode\": \"agent\"}",
+                "extra_headers": "{\"X-Mode\": \"agent\", \"X-Model-Provider\": \"openai_compatible\"}",
                 "max_tokens": 512,
                 "prompt": "你是普源精电（RIGOL）的专业示波器技术支持助手。请始终使用中文回复用户的问题。为了保证操作效率，你的回复必须非常简短、精确，直接确认指令或给出结果，严禁啰嗦。",
                 "greeting": "前面两段解决的是“问”和“查”，第三段我们来硬核一点：不动手，只动嘴，语音控制示波器。",
