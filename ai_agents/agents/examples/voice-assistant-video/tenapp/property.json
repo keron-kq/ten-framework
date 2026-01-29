@@ -64,7 +64,7 @@
               "addon": "openai_llm2_python",
               "extension_group": "chatgpt",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -118,7 +118,7 @@
               "name": "vllm",
               "addon": "openai_llm2_python",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -314,7 +314,7 @@
               "addon": "openai_llm2_python",
               "extension_group": "chatgpt",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -378,7 +378,7 @@
               "name": "vllm",
               "addon": "openai_llm2_python",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -574,7 +574,7 @@
               "addon": "openai_llm2_python",
               "extension_group": "chatgpt",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -638,7 +638,7 @@
               "name": "vllm",
               "addon": "openai_llm2_python",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -834,12 +834,12 @@
               "addon": "openai_llm2_python",
               "extension_group": "chatgpt",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
                 "max_tokens": 256,
-                "prompt": "作为普源精电（RIGOL）打造的具备强逻辑思维能力的AI助手，你能够针对问题按照“原因+建议+解决步骤”的思路给出结构化答案。请确保回答极其精炼，直接给出解决方案，不要有废话。",
+                "prompt": "作为普源精电（RIGOL）打造的智能助手，你具备出色的逻辑思维和问题分析能力。\n\n回答时请自然流畅地展现你的思考过程，可以灵活运用以下思路（但不必刻板遵循）：\n- 理解问题的本质和背景\n- 分析可能的原因或思路\n- 给出清晰可行的建议\n\n请保持回答简洁有力，用对话的语气，像一个经验丰富的同事在给建议。不要有冗长的开场白或过于正式的格式。",
                 "proxy_url": "${env:OPENAI_PROXY_URL|}",
                 "greeting": "接下来用10分钟做三段演示——从智能问答，到企业知识，再到语音控制硬件，让大家看到大模型如何一步步走进真实业务流程。首先是最直观的一段：智能对话问答。",
                 "max_memory_length": 10
@@ -898,7 +898,7 @@
               "name": "vllm",
               "addon": "openai_llm2_python",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -1162,7 +1162,7 @@
               "name": "vllm",
               "addon": "openai_llm2_python",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -1467,7 +1467,7 @@
               "name": "vllm",
               "addon": "openai_llm2_python",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -1663,7 +1663,7 @@
               "addon": "openai_llm2_python",
               "extension_group": "chatgpt",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -1727,7 +1727,7 @@
               "name": "vllm",
               "addon": "openai_llm2_python",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -2010,7 +2010,7 @@
               "name": "vllm",
               "addon": "openai_llm2_python",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -2206,7 +2206,7 @@
               "addon": "openai_llm2_python",
               "extension_group": "chatgpt",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
@@ -2260,7 +2260,7 @@
               "name": "vllm",
               "addon": "openai_llm2_python",
               "property": {
-                "base_url": "https://api.openai.com/v1",
+                "base_url": "${env:OPENAI_BASE_URL}",
                 "api_key": "${env:OPENAI_API_KEY}",
                 "frequency_penalty": 0.9,
                 "model": "${env:OPENAI_MODEL}",
