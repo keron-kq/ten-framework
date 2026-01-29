@@ -135,25 +135,15 @@ export default function Home() {
             }
             
             if (textItem.text) {
-                    // CRITICAL FIX 2: Detect if a new response has started (current text is shorter than what we've tracked)
+                    // CRITICAL FIX 2: Detect if a new response has started
                     const currentText = textItem.text || "";
                     
                     if (currentText.length < lastSentTextRef.current.length) {
-                        // Text got shorter - this means LLM started a NEW response
-                        // Only reset if the difference is significant (not just minor fluctuation)
-                        const diff = lastSentTextRef.current.length - currentText.length;
-                        
-                        if (diff > 10 || currentText.length < 10) {
-                            // Significant reset - new response
-                            console.log("[page.tsx] 🔄 New response detected (large decrease), resetting");
-                            isFirstChunkRef.current = true;
-                            lastSentTextRef.current = "";
-                            textBufferRef.current = "";
-                        } else {
-                            // Minor fluctuation - ignore to prevent duplicate playback
-                            console.log("[page.tsx] ⏭️ Minor text fluctuation, ignoring");
-                            return;
-                        }
+                        // Text got shorter - new response started
+                        console.log("[page.tsx] 🔄 New response detected (length decreased), resetting");
+                        isFirstChunkRef.current = true;
+                        lastSentTextRef.current = "";
+                        textBufferRef.current = "";
                     }
 
                     // CRITICAL FIX: If lastSentText is empty but isFirstChunk is false, force reset
