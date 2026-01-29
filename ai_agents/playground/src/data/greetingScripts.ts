@@ -55,7 +55,7 @@ export const GREETING_SCRIPTS_MAP: Record<string, Array<{ name: string; text: st
   "part6_Oscilloscopecontrol": [
     {
       "name": "语音控制",
-      "text": "前面两段解决的是\"问\"和\"查\"，第三段我们来硬核一点：不动手，只动嘴，语音控制示波器。"
+      "text": "先请各位同事扫二维码，这样可以观看实时示波器屏幕。前面两段解决的是\"问\"和\"查\"，第三段我们来硬核一点：不动手，只动嘴，语音控制示波器。"
     },
     {
       "name": "言出法随",
