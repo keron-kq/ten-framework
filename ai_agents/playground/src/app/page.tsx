@@ -135,15 +135,25 @@ export default function Home() {
             }
             
             if (textItem.text) {
-                    // CRITICAL FIX 2: Detect if a new response has started
+                    // CRITICAL FIX 2: Intelligent detection of new response vs LLM rewind
                     const currentText = textItem.text || "";
                     
                     if (currentText.length < lastSentTextRef.current.length) {
-                        // Text got shorter - new response started
-                        console.log("[page.tsx] 🔄 New response detected (length decreased), resetting");
-                        isFirstChunkRef.current = true;
-                        lastSentTextRef.current = "";
-                        textBufferRef.current = "";
+                        // Text got shorter - could be new response OR same response rewinding
+                        // Key: Check if current text is a PREFIX of what we've already sent
+                        const isPrefix = lastSentTextRef.current.startsWith(currentText);
+                        
+                        if (isPrefix && currentText.length > 5) {
+                            // Same response rewinding - IGNORE to prevent duplicate playback
+                            console.log("[page.tsx] ⏭️ LLM rewind within same response, ignoring to prevent duplicate");
+                            return;
+                        } else {
+                            // New response started (or very short text suggesting reset)
+                            console.log("[page.tsx] 🔄 New response detected, resetting");
+                            isFirstChunkRef.current = true;
+                            lastSentTextRef.current = "";
+                            textBufferRef.current = "";
+                        }
                     }
 
                     // CRITICAL FIX: If lastSentText is empty but isFirstChunk is false, force reset
