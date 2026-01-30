@@ -368,7 +368,8 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
                 width: "100%", 
                 height: "100%",
                 position: "relative",
-                pointerEvents: "none"  // 让点击事件穿透到下层或上层元素
+                pointerEvents: "none",
+                zIndex: 1
             }}
         />
         
