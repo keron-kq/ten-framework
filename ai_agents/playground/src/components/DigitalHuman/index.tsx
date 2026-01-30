@@ -214,8 +214,8 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
       try {
         const avatar = new window.XmovAvatar({
           containerId: `#${containerId}`,
-          appId: "9cf5b401d152471a8f2cd928acfed838",
-          appSecret: "85a9f69d8be64c27915318de32acad26",
+          appId: "a2ad3f117e18462cac18c782c9eebe52",
+          appSecret: "05b0d048939049ebb1ccb50fe72bde0b",
           gatewayServer: "https://nebula-agent.xingyun3d.com/user/v1/ttsa/session",
           hardwareAcceleration: "prefer-hardware",
           enableLogger: true,
