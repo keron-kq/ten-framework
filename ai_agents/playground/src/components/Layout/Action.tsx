@@ -233,7 +233,7 @@ export default function ActionBar(props: {
                     <input
                       type="range"
                       min="5"
-                      max="50"
+                      max="80"
                       value={vadThreshold}
                       onChange={(e) => onVadThresholdChange?.(parseInt(e.target.value))}
                       className="w-full h-2 bg-[#333] rounded-lg"
@@ -242,7 +242,9 @@ export default function ActionBar(props: {
                     <div className="text-xs text-gray-500 mt-1">
                       {vadThreshold < 12 && "非常灵敏"}
                       {vadThreshold >= 12 && vadThreshold <= 18 && "平衡推荐"}
-                      {vadThreshold > 18 && "保守抗干扰"}
+                      {vadThreshold > 18 && vadThreshold <= 30 && "保守抗干扰"}
+                      {vadThreshold > 30 && vadThreshold <= 50 && "高度保守"}
+                      {vadThreshold > 50 && "极高阈值（强抗噪）"}
                     </div>
                   </div>
 
@@ -298,16 +300,16 @@ export default function ActionBar(props: {
                       >
                         平衡⭐
                       </button>
-                      <button
-                        onClick={() => {
-                          onVadThresholdChange?.(20);
-                          onVadConsecutiveChange?.(2);
-                        }}
-                        className="px-2 py-1 bg-[#333] hover:bg-[#444] rounded text-xs text-white disabled:opacity-50"
-                        disabled={!vadEnabled}
-                      >
-                        保守
-                      </button>
+              <button
+                onClick={() => {
+                  onVadThresholdChange?.(25);
+                  onVadConsecutiveChange?.(3);
+                }}
+                className="px-2 py-1 bg-[#333] hover:bg-[#444] rounded text-xs text-white disabled:opacity-50"
+                disabled={!vadEnabled}
+              >
+                保守
+              </button>
                     </div>
                   </div>
                 </div>
