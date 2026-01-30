@@ -6,6 +6,7 @@ import DigitalHuman, { DigitalHumanRef } from "@/components/DigitalHuman";
 export default function AvatarPage() {
   const digitalHumanRef = useRef<DigitalHumanRef>(null);
   const [started, setStarted] = useState(false);
+  const [subtitle, setSubtitle] = useState<string>("");
 
   useEffect(() => {
     // Initialize BroadcastChannel
@@ -27,8 +28,14 @@ export default function AvatarPage() {
           digitalHumanRef.current?.speak(payload.text, payload.isStart, payload.isEnd);
           break;
           
+        case "subtitle":
+          // payload: { text }
+          setSubtitle(payload.text || "");
+          break;
+          
         case "stop":
           digitalHumanRef.current?.stopSpeaking();
+          setSubtitle(""); // Clear subtitle on stop
           break;
           
         case "destroy":
@@ -53,8 +60,23 @@ export default function AvatarPage() {
     <div className="w-screen h-screen bg-black overflow-hidden relative flex flex-col items-center justify-center">
       
       {/* Digital Human is always mounted but hidden until started */}
-      <div className={`w-full h-full ${!started ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`w-full h-full relative ${!started ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <DigitalHuman ref={digitalHumanRef} className="w-full h-full" autoConnect={false} />
+          
+          {/* Subtitle for Projection Mode */}
+          {subtitle && (
+            <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none">
+                <div className="bg-gradient-to-t from-black/70 via-black/40 to-transparent px-6 py-3 pb-4">
+                    <div className="text-center text-white text-xl leading-relaxed tracking-wide" 
+                         style={{ 
+                           textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                           fontWeight: 400
+                         }}>
+                        {subtitle}
+                    </div>
+                </div>
+            </div>
+          )}
       </div>
 
       {/* Start Overlay - Keep mounted but hidden to avoid React DOM conflicts */}

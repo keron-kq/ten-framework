@@ -69,15 +69,6 @@ export default function Home() {
     
     // Listen for text changes (LLM output) to drive Digital Human
     const onTextChanged = (textItem: IChatItem) => {
-        console.log("========== onTextChanged FIRED ==========");
-        console.log("[page.tsx] Event details:", {
-            type: textItem.type,
-            typeValue: EMessageType.AGENT,
-            isAgent: textItem.type === EMessageType.AGENT,
-            text: textItem.text?.substring(0, 50) + "...",
-            textLength: textItem.text?.length,
-            isFinal: textItem.isFinal
-        });
         
         // Reset streaming state when user starts a new conversation
         if (textItem.type === EMessageType.USER) {
@@ -130,7 +121,6 @@ export default function Home() {
             // CRITICAL FIX: In projection mode, local DH is disconnected, so we shouldn't block sending!
             // We use the Ref here to be safe inside closure
             if (!isProjectionModeRef.current && !digitalHumanRef.current?.isConnected()) {
-                console.error("[page.tsx] ❌ DH not connected (Local), cannot send text");
                 return;
             }
             
@@ -173,15 +163,6 @@ export default function Home() {
                     
                     // Add new content to buffer
                     textBufferRef.current += newContent;
-                    
-                    console.log(`[page.tsx] 📝 Text processing:`, {
-                        currentLength: currentFullText.length,
-                        lastSentLength: lastSentTextRef.current.length,
-                        newContent: newContent,
-                        bufferNow: textBufferRef.current,
-                        isFirstChunk: isFirstChunkRef.current
-                    });
-                    
                     lastSentTextRef.current = currentFullText;
                     
                     // Determine if we should send now
@@ -200,21 +181,20 @@ export default function Home() {
                     const textToSend = textBufferRef.current;
                     const isStart = isFirstChunkRef.current;
                     
-                    console.log(`[page.tsx] 📤 SENDING:`, {
-                        text: textToSend,
-                        isStart: isStart,
-                        isEnd: isEnd,
-                        textLength: textToSend.length
-                    });
-                    
                     // Call speak with buffered content
                     if (!isProjectionModeRef.current) {
                         digitalHumanRef.current?.speak(textToSend, isStart, isEnd);
+                        // Update subtitle with full accumulated text
+                        digitalHumanRef.current?.updateSubtitle(currentFullText);
                     } else {
                         console.log(`[page.tsx] 📡 Sending SPEAK command to projection: "${textToSend}"`);
                         broadcastChannelRef.current?.postMessage({
                             type: "speak",
                             payload: { text: textToSend, isStart, isEnd }
+                        });
+                        broadcastChannelRef.current?.postMessage({
+                            type: "subtitle",
+                            payload: { text: currentFullText }
                         });
                     }
                     
@@ -228,6 +208,15 @@ export default function Home() {
                         isDigitalHumanSpeakingRef.current = false;
                         const { rtcManager } = require("../manager/rtc/rtc");
                         rtcManager.setDigitalHumanSpeaking(false);
+                        // Clear subtitle when speech ends
+                        if (!isProjectionModeRef.current) {
+                            digitalHumanRef.current?.updateSubtitle("");
+                        } else {
+                            broadcastChannelRef.current?.postMessage({
+                                type: "subtitle",
+                                payload: { text: "" }
+                            });
+                        }
                     }
                     
                     // Clear buffer and update flags
@@ -364,9 +353,20 @@ export default function Home() {
             type: "speak",
             payload: { text, isStart: true, isEnd: true }
         });
+        broadcastChannelRef.current?.postMessage({
+            type: "subtitle",
+            payload: { text: text }
+        });
     } else {
         if (digitalHumanRef.current?.isConnected()) {
             digitalHumanRef.current.speak(text, true, true);
+            // Update subtitle for greeting
+            digitalHumanRef.current.updateSubtitle(text);
+            
+            // Clear subtitle after estimated duration
+            setTimeout(() => {
+                digitalHumanRef.current?.updateSubtitle("");
+            }, estimatedDuration);
         } else {
             console.warn("[page.tsx] ❌ Digital Human not connected, cannot speak");
         }

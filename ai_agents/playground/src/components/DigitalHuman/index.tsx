@@ -36,6 +36,7 @@ export interface DigitalHumanRef {
   disconnect: () => void;
   reconnect: () => void;
   stopSpeaking: () => void;
+  updateSubtitle: (text: string) => void;
 }
 
 const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConnect?: boolean }>(
@@ -43,6 +44,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
     const [sdkReady, setSdkReady] = useState(false);
     const [instance, setInstance] = useState<any>(null);
     const [status, setStatus] = useState<string>("init");
+    const [subtitle, setSubtitle] = useState<string>("");
     const containerId = "xmov-container";
 
     // Polyfill for potential SDK bug (windows vs window)
@@ -188,6 +190,9 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
             console.error("[DigitalHuman] Stop speaking error:", e);
           }
         }
+      },
+      updateSubtitle: (text: string) => {
+        setSubtitle(text);
       }
     }));
 
@@ -306,7 +311,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
     };
 
     return (
-      <div className={`relative w-full h-full ${className || ''}`}>
+      <div className={`relative w-full h-full flex items-center justify-center ${className || ''}`}>
         {/* Connection Toggle Button - Top Right with link icon */}
         <button 
             onClick={(e) => {
@@ -356,13 +361,36 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
         {/* Container for the Digital Human Canvas - Pure container for SDK, no React children */}
         <div 
             id={containerId} 
-            className="w-full h-full bg-gradient-to-b from-black/30 to-black/10"
+            className="w-full h-full bg-gradient-to-b from-black/30 to-black/10 hide-sdk-subtitle"
             style={{ 
                 width: "100%", 
                 height: "100%",
                 position: "relative"
             }}
         />
+        
+        {/* Hide SDK built-in subtitle with comprehensive selectors */}
+        <style jsx global>{`
+          /* Hide all possible SDK subtitle elements */
+          #xmov-container div[style*="position: absolute"][style*="bottom"],
+          #xmov-container div[style*="text-align: center"],
+          #xmov-container [class*="subtitle"],
+          #xmov-container [class*="caption"],
+          #xmov-container [class*="text"],
+          #xmov-container [id*="subtitle"],
+          .xmov-subtitle,
+          .ttsa-subtitle,
+          .avatar-subtitle {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+          }
+          
+          /* Only allow our custom subtitle to show */
+          #xmov-container {
+            overflow: hidden;
+          }
+        `}</style>
 
         {/* RIGOL Logo Overlay - Top Left */}
         <div className="absolute top-4 left-4 z-20 pointer-events-none opacity-80">
@@ -388,6 +416,21 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
                 <div className="bg-black/70 px-6 py-3 rounded-lg border border-yellow-500/50 backdrop-blur-sm pointer-events-auto">
                     <div className="text-xl font-mono">Status: {status}</div>
                     {!sdkReady && <div className="text-sm mt-1">Loading SDK...</div>}
+                </div>
+            </div>
+        )}
+
+        {/* Subtitle Area - Bottom */}
+        {subtitle && status === "connected" && (
+            <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none">
+                <div className="bg-gradient-to-t from-black/70 via-black/40 to-transparent px-4 py-2 pb-3">
+                    <div className="text-center text-white text-sm leading-relaxed tracking-wide" 
+                         style={{ 
+                           textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                           fontWeight: 400
+                         }}>
+                        {subtitle}
+                    </div>
                 </div>
             </div>
         )}
