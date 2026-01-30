@@ -39,8 +39,8 @@ export interface DigitalHumanRef {
   updateSubtitle: (text: string) => void;
 }
 
-const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConnect?: boolean }>(
-  ({ className, autoConnect = true }, ref) => {
+const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConnect?: boolean; showConnectionButton?: boolean }>(
+  ({ className, autoConnect = true, showConnectionButton = true }, ref) => {
     const [sdkReady, setSdkReady] = useState(false);
     const [instance, setInstance] = useState<any>(null);
     const [status, setStatus] = useState<string>("init");
@@ -313,6 +313,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
     return (
       <div className={`relative w-full h-full flex items-center justify-center ${className || ''}`}>
         {/* Connection Toggle Button - Top Right with link icon */}
+        {showConnectionButton && (
         <button 
             onClick={(e) => {
                 e.preventDefault();
@@ -357,6 +358,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
                 </>
             )}
         </button>
+        )}
         
         {/* Container for the Digital Human Canvas - Pure container for SDK, no React children */}
         <div 
@@ -365,7 +367,8 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
             style={{ 
                 width: "100%", 
                 height: "100%",
-                position: "relative"
+                position: "relative",
+                pointerEvents: "none"  // 让点击事件穿透到下层或上层元素
             }}
         />
         
@@ -422,7 +425,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
 
         {/* Subtitle Area - Bottom */}
         {subtitle && status === "connected" && (
-            <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none">
+            <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
                 <div className="bg-gradient-to-t from-black/70 via-black/40 to-transparent px-4 py-2 pb-3">
                     <div className="text-center text-white text-sm leading-relaxed tracking-wide" 
                          style={{ 

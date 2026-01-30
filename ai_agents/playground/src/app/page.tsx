@@ -18,7 +18,7 @@ const DynamicChatCard = dynamic(() => import("@/components/Chat/ChatCard"), {
   ssr: false,
 });
 
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ActionBar from "@/components/Layout/Action";
 
@@ -26,6 +26,7 @@ import DigitalHuman, { DigitalHumanRef } from "@/components/DigitalHuman";
 import { type IChatItem, EMessageType, EMessageDataType } from "@/types"; // Import types for event handling
 import { addChatItem } from "@/store/reducers/global"; // Import action creator
 import { useAppDispatch } from "@/common"; // Ensure useAppDispatch is imported
+import { ExternalAppWindow } from "@/components/ExternalAppWindow";
 
 export default function Home() {
   const dispatch = useAppDispatch(); // Add dispatch hook
@@ -55,6 +56,7 @@ export default function Home() {
   const [vadThreshold, setVadThreshold] = React.useState(15);
   const [vadConsecutive, setVadConsecutive] = React.useState(2);
   const isDigitalHumanSpeakingRef = React.useRef<boolean>(false);
+  const [showExternalApp, setShowExternalApp] = React.useState(false);
 
   React.useEffect(() => {
     // Initialize BroadcastChannel
@@ -181,11 +183,18 @@ export default function Home() {
                     const textToSend = textBufferRef.current;
                     const isStart = isFirstChunkRef.current;
                     
+                    console.log(`[page.tsx] 🎬 Sending chunk:`, {
+                        text: textToSend.substring(0, 20) + "...",
+                        isStart: isStart,
+                        isEnd: isEnd,
+                        isFinal: textItem.isFinal
+                    });
+                    
                     // Call speak with buffered content
                     if (!isProjectionModeRef.current) {
                         digitalHumanRef.current?.speak(textToSend, isStart, isEnd);
-                        // Update subtitle with full accumulated text
-                        digitalHumanRef.current?.updateSubtitle(currentFullText);
+                        // Update subtitle with current sentence (not full text)
+                        digitalHumanRef.current?.updateSubtitle(textToSend);
                     } else {
                         console.log(`[page.tsx] 📡 Sending SPEAK command to projection: "${textToSend}"`);
                         broadcastChannelRef.current?.postMessage({
@@ -194,7 +203,7 @@ export default function Home() {
                         });
                         broadcastChannelRef.current?.postMessage({
                             type: "subtitle",
-                            payload: { text: currentFullText }
+                            payload: { text: textToSend }
                         });
                     }
                     
@@ -205,18 +214,21 @@ export default function Home() {
                         rtcManager.setDigitalHumanSpeaking(true);
                     }
                     if (isEnd) {
+                        console.log("[page.tsx] 🏁 Speech ended, clearing subtitle");
                         isDigitalHumanSpeakingRef.current = false;
                         const { rtcManager } = require("../manager/rtc/rtc");
                         rtcManager.setDigitalHumanSpeaking(false);
-                        // Clear subtitle when speech ends
-                        if (!isProjectionModeRef.current) {
-                            digitalHumanRef.current?.updateSubtitle("");
-                        } else {
-                            broadcastChannelRef.current?.postMessage({
-                                type: "subtitle",
-                                payload: { text: "" }
-                            });
-                        }
+                        // Clear subtitle when speech ends (with small delay for smooth transition)
+                        setTimeout(() => {
+                            if (!isProjectionModeRef.current) {
+                                digitalHumanRef.current?.updateSubtitle("");
+                            } else {
+                                broadcastChannelRef.current?.postMessage({
+                                    type: "subtitle",
+                                    payload: { text: "" }
+                                });
+                            }
+                        }, 500);  // 500ms delay before clearing
                     }
                     
                     // Clear buffer and update flags
@@ -283,6 +295,16 @@ export default function Home() {
     const { rtcManager } = require("../manager/rtc/rtc");
     rtcManager.setDigitalHumanSpeaking(false);
   }, [selectedGraphId]);
+
+  // Sync external app state to projection window
+  React.useEffect(() => {
+    if (isProjectionMode) {
+      broadcastChannelRef.current?.postMessage({
+        type: "external_app",
+        payload: { show: showExternalApp }
+      });
+    }
+  }, [showExternalApp, isProjectionMode]);
 
   // P1 Optimization: Preheat digital human SDK when connected
   React.useEffect(() => {
@@ -357,6 +379,14 @@ export default function Home() {
             type: "subtitle",
             payload: { text: text }
         });
+        
+        // Clear subtitle after estimated duration (投屏模式)
+        setTimeout(() => {
+            broadcastChannelRef.current?.postMessage({
+                type: "subtitle",
+                payload: { text: "" }
+            });
+        }, estimatedDuration);
     } else {
         if (digitalHumanRef.current?.isConnected()) {
             digitalHumanRef.current.speak(text, true, true);
@@ -447,6 +477,21 @@ export default function Home() {
                     >
                         <ExternalLink className="h-4 w-4" />
                     </Button>
+                    
+                    {/* External App Button */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-8 w-8 rounded-full border transition-all ${
+                            showExternalApp 
+                                ? "border-green-500 bg-green-500/20 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                                : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
+                        }`}
+                        title={showExternalApp ? "关闭外部应用" : "显示外部应用"}
+                        onClick={() => setShowExternalApp(!showExternalApp)}
+                    >
+                        <Monitor className="h-4 w-4" />
+                    </Button>
                 </div>
             </div>
 
@@ -466,8 +511,16 @@ export default function Home() {
                      
                      {/* Digital Human Component - Relative positioning to allow centering */}
                      {/* FIX: Keep DigitalHuman mounted but hidden to avoid SDK cleanup crashes */}
-                     <div className={`w-full h-full ${isProjectionMode ? 'hidden' : 'block'}`}>
+                     <div className={`w-full h-full ${isProjectionMode ? 'hidden' : 'block'} relative`}>
                         <DigitalHuman ref={digitalHumanRef} className="w-full h-full" />
+                        
+                        {/* External App Window */}
+                        {showExternalApp && (
+                          <ExternalAppWindow 
+                            url="http://172.18.26.49/control.html"
+                            onClose={() => setShowExternalApp(false)}
+                          />
+                        )}
                      </div>
 
                      {isProjectionMode && (

@@ -2,11 +2,14 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import DigitalHuman, { DigitalHumanRef } from "@/components/DigitalHuman";
+import { ExternalAppWindow } from "@/components/ExternalAppWindow";
+import { Monitor } from "lucide-react";
 
 export default function AvatarPage() {
   const digitalHumanRef = useRef<DigitalHumanRef>(null);
   const [started, setStarted] = useState(false);
   const [subtitle, setSubtitle] = useState<string>("");
+  const [showExternalApp, setShowExternalApp] = useState(false);
 
   useEffect(() => {
     // Initialize BroadcastChannel
@@ -31,6 +34,11 @@ export default function AvatarPage() {
         case "subtitle":
           // payload: { text }
           setSubtitle(payload.text || "");
+          break;
+          
+        case "external_app":
+          // payload: { show }
+          setShowExternalApp(payload.show);
           break;
           
         case "stop":
@@ -61,11 +69,35 @@ export default function AvatarPage() {
       
       {/* Digital Human is always mounted but hidden until started */}
       <div className={`w-full h-full relative ${!started ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          <DigitalHuman ref={digitalHumanRef} className="w-full h-full" autoConnect={false} />
+          <DigitalHuman ref={digitalHumanRef} className="w-full h-full" autoConnect={false} showConnectionButton={false} />
+          
+          {/* External App Window (投屏模式) */}
+          {showExternalApp && (
+            <ExternalAppWindow 
+              url="http://172.18.26.49/control.html"
+              onClose={() => setShowExternalApp(false)}
+            />
+          )}
+          
+          {/* External App Toggle Button (投屏模式) */}
+          {started && (
+            <button
+              onClick={() => setShowExternalApp(!showExternalApp)}
+              className={`absolute top-4 right-4 z-50 p-2 rounded-full transition-all ${
+                showExternalApp
+                  ? "bg-green-500/20 border-2 border-green-500 text-green-500"
+                  : "bg-[#181a1d] border-2 border-[#FFCC00] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black"
+              }`}
+              style={{ pointerEvents: "auto" }}
+              title={showExternalApp ? "关闭外部应用" : "显示外部应用"}
+            >
+              <Monitor className="w-5 h-5" />
+            </button>
+          )}
           
           {/* Subtitle for Projection Mode */}
           {subtitle && (
-            <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none">
+            <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
                 <div className="bg-gradient-to-t from-black/70 via-black/40 to-transparent px-6 py-3 pb-4">
                     <div className="text-center text-white text-xl leading-relaxed tracking-wide" 
                          style={{ 
