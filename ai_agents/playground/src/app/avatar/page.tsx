@@ -109,11 +109,6 @@ export default function AvatarPage() {
             </button>
       </div>
       
-      <div className="absolute top-2 left-2 z-50 opacity-30 hover:opacity-100 transition-opacity">
-        <div className="text-xs text-white bg-black/50 px-2 py-1 rounded border border-white/20">
-          🟢 投屏模式 (Slave)
-        </div>
-      </div>
     </div>
   );
 }
