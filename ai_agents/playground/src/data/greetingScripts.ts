@@ -3,12 +3,11 @@ export const GRAPH_DISPLAY_NAME_MAP: Record<string, string> = {
   "part1_begginning": "1-开场介绍",
   "part2_AIReview": "2-风云回顾",
   "part3_Musicgeneration": "3-艺境新声",
-  "part4_Intelligentconversation": "4-智能对话",
-  "part5_SharingCenter": "5-共享中心",
-  "part6_Oscilloscopecontrol": "6-示波器控制",
-  "part7_Visualrecognition": "7-隔空取物",
-  "part8_Consistencytesting": "8-一致性测试",
-  "part9_endding": "9-尾声"
+  "part5_SharingCenter": "4-共享中心",
+  "part6_Oscilloscopecontrol": "5-示波器控制",
+  "part7_Visualrecognition": "6-隔空取物",
+  "part8_Consistencytesting": "7-一致性测试",
+  "part9_endding": "8-尾声"
 };
 
 export const GREETING_SCRIPTS_MAP: Record<string, Array<{ name: string; text: string }>> = {
@@ -30,16 +29,6 @@ export const GREETING_SCRIPTS_MAP: Record<string, Array<{ name: string; text: st
     {
       "name": "技术揭秘",
       "text": "是不是觉得不仅旋律洗脑，画面还特别赛博朋克？给大家揭秘一下背后的技术：\n  - 音乐部分： 我们使用了Suno的音频生成模型。它的原理就像是一个\"音乐接龙\"高手，通过学习海量的乐理和声波数据，它并不懂五线谱，但它理解音频在大数据维度的概率分布，从而预测出下一个最动听的音符。\n  - 画面部分： 则是视频生成模型的杰作。我们输入了提示词，模型通过扩散模型（Diffusion Model），从一片噪点中一步步\"降噪\"，还原出了这些从未存在过的震撼画面。\n这就是AI的创造力，它把想象力的门槛降到了最低！"
-    }
-  ],
-  "part4_Intelligentconversation": [
-    {
-      "name": "三段演示",
-      "text": "接下来用10分钟做三段演示——从智能问答，到企业知识，再到语音控制硬件，让大家看到大模型如何一步步走进真实业务流程。首先是最直观的一段：智能对话问答。"
-    },
-    {
-      "name": "信息获取效率",
-      "text": "你会发现它不是在背书，而是在把问题拆解、归因、给路径：\n  - 先澄清场景和约束\n  - 再给可执行的排查顺序\n  - 最后输出可以直接照做的步骤清单\n这一步解决的是：\"信息获取效率\"。"
     }
   ],
   "part5_SharingCenter": [
