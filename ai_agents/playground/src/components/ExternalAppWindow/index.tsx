@@ -6,10 +6,17 @@ import { Maximize2, Minimize2, X } from "lucide-react";
 interface ExternalAppWindowProps {
   url: string;
   onClose?: () => void;
+  onExpandChange?: (expanded: boolean) => void;
 }
 
-export const ExternalAppWindow: React.FC<ExternalAppWindowProps> = ({ url, onClose }) => {
+export const ExternalAppWindow: React.FC<ExternalAppWindowProps> = ({ url, onClose, onExpandChange }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  const handleExpandToggle = () => {
+    const newExpanded = !isExpanded;
+    setIsExpanded(newExpanded);
+    onExpandChange?.(newExpanded);
+  };
 
   return (
     <div
@@ -49,7 +56,7 @@ export const ExternalAppWindow: React.FC<ExternalAppWindowProps> = ({ url, onClo
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsExpanded(!isExpanded);
+              handleExpandToggle();
             }}
             className="p-1.5 hover:bg-[#333] rounded transition-colors cursor-pointer"
             title={isExpanded ? "缩小" : "放大"}

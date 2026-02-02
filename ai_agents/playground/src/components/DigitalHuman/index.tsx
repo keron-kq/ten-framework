@@ -39,8 +39,8 @@ export interface DigitalHumanRef {
   updateSubtitle: (text: string) => void;
 }
 
-const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConnect?: boolean; showConnectionButton?: boolean }>(
-  ({ className, autoConnect = true, showConnectionButton = true }, ref) => {
+const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConnect?: boolean; showConnectionButton?: boolean; isPiPMode?: boolean }>(
+  ({ className, autoConnect = true, showConnectionButton = true, isPiPMode = false }, ref) => {
     const [sdkReady, setSdkReady] = useState(false);
     const [instance, setInstance] = useState<any>(null);
     const [status, setStatus] = useState<string>("init");
@@ -311,9 +311,33 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
     };
 
     return (
-      <div className={`relative w-full h-full flex items-center justify-center ${className || ''}`}>
+      <div 
+        className={`flex items-center justify-center ${className || ''} transition-all duration-500`}
+        style={isPiPMode ? {
+          // PiP Mode: 使用 scale 缩小并移到右下角
+          position: "absolute",
+          bottom: "80px",
+          right: "20px",
+          width: "100%",
+          height: "100%",
+          transform: "scale(0.18)",  // 缩小到 18%
+          transformOrigin: "bottom right",  // 从右下角缩放
+          zIndex: 70,
+          border: "2px solid #FFCC00",
+          borderRadius: "8px",
+          overflow: "hidden",
+          boxShadow: "0 0 30px rgba(255, 204, 0, 0.5)"
+        } : {
+          // Normal Mode: 全屏
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          transform: "scale(1)",
+          transformOrigin: "center"
+        }}
+      >
         {/* Connection Toggle Button - Top Right with link icon */}
-        {showConnectionButton && (
+        {showConnectionButton && !isPiPMode && (
         <button 
             onClick={(e) => {
                 e.preventDefault();
@@ -397,6 +421,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
         `}</style>
 
         {/* RIGOL Logo Overlay - Top Left */}
+        {!isPiPMode && (
         <div className="absolute top-4 left-4 z-20 pointer-events-none opacity-80">
             <div className="flex items-center gap-2">
                 {/* RIGOL Logo Placeholder */}
@@ -406,13 +431,16 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
                 </div>
             </div>
         </div>
+        )}
 
         {/* Optional Watermark - Bottom Right */}
+        {!isPiPMode && (
         <div className="absolute bottom-4 right-4 z-20 pointer-events-none opacity-50">
             <div className="text-[10px] text-white/50 font-mono">
                 POWERED BY TEN FRAMEWORK
             </div>
         </div>
+        )}
 
         {/* Status Indicator - Overlay (Outside SDK container to avoid DOM conflicts) */}
         {status !== "connected" && (
@@ -425,7 +453,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
         )}
 
         {/* Subtitle Area - Bottom */}
-        {subtitle && status === "connected" && (
+        {subtitle && status === "connected" && !isPiPMode && (
             <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
                 <div className="bg-gradient-to-t from-black/70 via-black/40 to-transparent px-4 py-2 pb-3">
                     <div className="text-center text-white text-sm leading-relaxed tracking-wide" 

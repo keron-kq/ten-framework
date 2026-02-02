@@ -10,6 +10,7 @@ export default function AvatarPage() {
   const [started, setStarted] = useState(false);
   const [subtitle, setSubtitle] = useState<string>("");
   const [showExternalApp, setShowExternalApp] = useState(false);
+  const [externalAppExpanded, setExternalAppExpanded] = useState(false);
 
   useEffect(() => {
     // Initialize BroadcastChannel
@@ -69,13 +70,23 @@ export default function AvatarPage() {
       
       {/* Digital Human is always mounted but hidden until started */}
       <div className={`w-full h-full relative ${!started ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          <DigitalHuman ref={digitalHumanRef} className="w-full h-full" autoConnect={false} showConnectionButton={false} />
+          <DigitalHuman 
+            ref={digitalHumanRef} 
+            className="w-full h-full" 
+            autoConnect={false} 
+            showConnectionButton={false}
+            isPiPMode={externalAppExpanded}
+          />
           
           {/* External App Window (投屏模式) */}
           {showExternalApp && (
             <ExternalAppWindow 
               url="http://172.18.26.49/control.html"
-              onClose={() => setShowExternalApp(false)}
+              onClose={() => {
+                setShowExternalApp(false);
+                setExternalAppExpanded(false);
+              }}
+              onExpandChange={setExternalAppExpanded}
             />
           )}
           

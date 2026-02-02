@@ -123,7 +123,24 @@ class MainControlExtension(AsyncExtension):
             await self._interrupt()
         if event.final:
             self.turn_id += 1
-            await self.agent.queue_llm_input(event.text)
+            
+            # Remove wake words before sending to LLM to avoid confusion
+            llm_input = event.text
+            if has_wake_word:
+                # Remove all wake words from the text
+                for wake_word in WAKE_WORDS:
+                    llm_input = llm_input.replace(wake_word, "")
+                # Remove leading punctuation
+                llm_input = llm_input.lstrip("，。！？；：、, ").strip()
+                self.ten_env.log_info(f"[MainControl] Removed wake words: '{event.text}' -> '{llm_input}'")
+            
+            # Only send to LLM if there's actual content after removing wake words
+            if llm_input:
+                await self.agent.queue_llm_input(llm_input)
+            else:
+                self.ten_env.log_info("[MainControl] Only wake word detected, skipping LLM (just activated)")
+        
+        # Always send full text to frontend for display
         await self._send_transcript("user", event.text, event.final, stream_id)
 
     @agent_event_handler(LLMResponseEvent)

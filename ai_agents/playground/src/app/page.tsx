@@ -57,6 +57,8 @@ export default function Home() {
   const [vadConsecutive, setVadConsecutive] = React.useState(2);
   const isDigitalHumanSpeakingRef = React.useRef<boolean>(false);
   const [showExternalApp, setShowExternalApp] = React.useState(false);
+  const [externalAppExpanded, setExternalAppExpanded] = React.useState(false);
+  const [currentSubtitle, setCurrentSubtitle] = React.useState<string>("");
 
   React.useEffect(() => {
     // Initialize BroadcastChannel
@@ -80,6 +82,8 @@ export default function Home() {
             isDigitalHumanSpeakingRef.current = false;
             const { rtcManager } = require("../manager/rtc/rtc");
             rtcManager.setDigitalHumanSpeaking(false);
+            // Clear global subtitle when user interrupts
+            setCurrentSubtitle("");
             
             // Only interrupt ONCE per user turn to avoid spamming the SDK
             if (!isInterruptedRef.current) {
@@ -195,6 +199,8 @@ export default function Home() {
                         digitalHumanRef.current?.speak(textToSend, isStart, isEnd);
                         // Update subtitle with current sentence (not full text)
                         digitalHumanRef.current?.updateSubtitle(textToSend);
+                        // Also update global subtitle state for PiP mode
+                        setCurrentSubtitle(textToSend);
                     } else {
                         console.log(`[page.tsx] 📡 Sending SPEAK command to projection: "${textToSend}"`);
                         broadcastChannelRef.current?.postMessage({
@@ -222,6 +228,7 @@ export default function Home() {
                         setTimeout(() => {
                             if (!isProjectionModeRef.current) {
                                 digitalHumanRef.current?.updateSubtitle("");
+                                setCurrentSubtitle("");  // Also clear global subtitle
                             } else {
                                 broadcastChannelRef.current?.postMessage({
                                     type: "subtitle",
@@ -388,6 +395,8 @@ export default function Home() {
             });
         }, estimatedDuration);
     } else {
+        setCurrentSubtitle(text);  // Update global subtitle for greeting
+        
         if (digitalHumanRef.current?.isConnected()) {
             digitalHumanRef.current.speak(text, true, true);
             // Update subtitle for greeting
@@ -396,6 +405,7 @@ export default function Home() {
             // Clear subtitle after estimated duration
             setTimeout(() => {
                 digitalHumanRef.current?.updateSubtitle("");
+                setCurrentSubtitle("");
             }, estimatedDuration);
         } else {
             console.warn("[page.tsx] ❌ Digital Human not connected, cannot speak");
@@ -512,14 +522,37 @@ export default function Home() {
                      {/* Digital Human Component - Relative positioning to allow centering */}
                      {/* FIX: Keep DigitalHuman mounted but hidden to avoid SDK cleanup crashes */}
                      <div className={`w-full h-full ${isProjectionMode ? 'hidden' : 'block'} relative`}>
-                        <DigitalHuman ref={digitalHumanRef} className="w-full h-full" />
+                        <DigitalHuman 
+                          ref={digitalHumanRef} 
+                          className="w-full h-full"
+                          isPiPMode={externalAppExpanded}
+                        />
                         
                         {/* External App Window */}
                         {showExternalApp && (
                           <ExternalAppWindow 
                             url="http://172.18.26.49/control.html"
-                            onClose={() => setShowExternalApp(false)}
+                            onClose={() => {
+                              setShowExternalApp(false);
+                              setExternalAppExpanded(false);
+                            }}
+                            onExpandChange={setExternalAppExpanded}
                           />
+                        )}
+                        
+                        {/* Global Subtitle (显示在 PiP 模式下) */}
+                        {currentSubtitle && externalAppExpanded && (
+                          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
+                            <div className="bg-gradient-to-t from-black/80 via-black/50 to-transparent px-6 py-3 pb-4">
+                              <div className="text-center text-white text-base leading-relaxed tracking-wide"
+                                   style={{
+                                     textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                                     fontWeight: 400
+                                   }}>
+                                {currentSubtitle}
+                              </div>
+                            </div>
+                          </div>
                         )}
                      </div>
 
