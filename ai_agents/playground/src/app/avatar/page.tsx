@@ -104,7 +104,7 @@ export default function AvatarPage() {
           {showExternalApp2 && (
             <MediaWindow 
               type="iframe"
-              url="http://172.18.33.34:8000/"
+              url="http://localhost:8000"
               title="外部应用"
               onClose={() => {
                 setShowExternalApp2(false);

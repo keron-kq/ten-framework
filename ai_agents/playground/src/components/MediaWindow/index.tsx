@@ -99,7 +99,11 @@ export const MediaWindow: React.FC<MediaWindowProps> = ({
             src={url}
             className="w-full h-full border-0"
             title={title}
-            sandbox="allow-scripts allow-same-origin allow-forms"
+            // NOTE: We embed external apps that may need camera/mic permissions.
+            // Without `allow`, browser Permissions Policy blocks getUserMedia in iframes.
+            allow="camera; microphone; fullscreen"
+            // Keep sandbox for safety, but allow modals for UX (some apps call alert()).
+            sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
             style={{ pointerEvents: "auto" }}
           />
         ) : (

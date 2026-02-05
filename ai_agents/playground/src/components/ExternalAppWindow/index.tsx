@@ -93,7 +93,9 @@ export const ExternalAppWindow: React.FC<ExternalAppWindowProps> = ({ url, onClo
           src={url}
           className="w-full h-full border-0"
           title="External Application"
-          sandbox="allow-scripts allow-same-origin allow-forms"
+          // Allow embedded apps to request camera/mic.
+          allow="camera; microphone; fullscreen"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
           style={{ pointerEvents: "auto" }}
         />
       </div>
