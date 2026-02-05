@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>接线检测工具 | 探头ROI检测</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #06090f;
+      --bg-primary: #0c1018;
+      --bg-secondary: #131a24;
+      --bg-card: #1a222e;
+      --bg-hover: #242e3c;
+      --accent-primary: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-amber: #f59e0b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #8896a8;
+      --text-muted: #5a6978;
+      --border-dim: #1e2836;
+      --border-active: #2a3a4c;
+      --glow-blue: rgba(59, 130, 246, 0.15);
+      --glow-green: rgba(34, 197, 94, 0.15);
+      --glow-red: rgba(239, 68, 68, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(12, 16, 24, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-dim);
+      padding: 12px 24px;
+    }
+
+    .header-inner {
+      max-width: 1920px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-cyan));
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: -0.5px;
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.25);
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-text .sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      color: var(--text-secondary);
+    }
+
+    .status-chip.ready {
+      color: var(--accent-green);
+      border-color: rgba(34, 197, 94, 0.3);
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .status-chip.error {
+      color: var(--accent-red);
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Main Layout */
+    main {
+      padding-top: 72px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Comparison Section - Hero Area */
+    .comparison-section {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border-dim);
+      min-height: calc(100vh - 200px);
+    }
+
+    @media (max-width: 1200px) {
+      .comparison-section {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+    }
+
+    .compare-panel {
+      background: var(--bg-primary);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-dim);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .panel-title .icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      font-size: 0.9rem;
+    }
+
+    .panel-title .icon.input {
+      background: rgba(6, 182, 212, 0.12);
+      color: var(--accent-cyan);
+    }
+
+    .panel-title .icon.output {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--accent-green);
+    }
+
+    .panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-active);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-primary);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent-primary), #2563eb);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn.primary:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn.danger {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    .btn.danger:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn.sm {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+    }
+
+    /* Canvas Area */
+    .canvas-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      background: 
+        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.01) 40px, rgba(255,255,255,0.01) 41px),
+        repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.01) 40px, rgba(255,255,255,0.01) 41px);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .canvas-wrapper canvas {
+      display: block;
+      max-width: 100%;
+      max-height: calc(100vh - 320px);
+      height: auto;
+      background: var(--bg-card);
+    }
+
+    .upload-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 60px 40px;
+      border: 2px dashed var(--border-active);
+      border-radius: 16px;
+      background: var(--bg-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 320px;
+      min-height: 260px;
+    }
+
+    .upload-placeholder:hover {
+      border-color: var(--accent-primary);
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .upload-placeholder .upload-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: var(--bg-card);
+      font-size: 1.8rem;
+    }
+
+    .upload-placeholder .upload-text {
+      text-align: center;
+    }
+
+    .upload-placeholder .upload-text h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .upload-placeholder .upload-text p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Result Overlay */
+    .result-overlay {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-active);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .result-badge.ok {
+      color: var(--accent-green);
+      border-color: rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.12);
+      box-shadow: 0 4px 30px rgba(34, 197, 94, 0.2);
+    }
+
+    .result-badge.no {
+      color: var(--accent-red);
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.12);
+      box-shadow: 0 4px 30px rgba(239, 68, 68, 0.2);
+    }
+
+    .result-badge.warn {
+      color: var(--accent-amber);
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.12);
+    }
+
+    .result-icon {
+      font-size: 1.3rem;
+    }
+
+    /* Control Panel */
+    .control-panel {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-dim);
+      padding: 16px 24px;
+    }
+
+    .control-inner {
+      max-width: 1920px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .control-item label {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .control-item input[type="range"] {
+      width: 100px;
+      accent-color: var(--accent-primary);
+    }
+
+    .control-item .value {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      min-width: 40px;
+    }
+
+    /* Reference Section - Collapsible */
+    .reference-section {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-dim);
+    }
+
+    .reference-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .reference-header:hover {
+      background: var(--bg-card);
+    }
+
+    .reference-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .reference-title .chevron {
+      transition: transform 0.2s ease;
+    }
+
+    .reference-section.expanded .reference-title .chevron {
+      transform: rotate(180deg);
+    }
+
+    .reference-content {
+      display: none;
+      padding: 0 24px 20px;
+    }
+
+    .reference-section.expanded .reference-content {
+      display: block;
+    }
+
+    .reference-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-width: 1200px;
+    }
+
+    @media (max-width: 900px) {
+      .reference-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .ref-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .ref-card h4 {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .ref-canvas-wrap {
+      background: var(--bg-deep);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ref-canvas-wrap canvas {
+      max-width: 100%;
+      max-height: 400px;
+    }
+
+    .ref-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    /* Log Panel */
+    .log-section {
+      background: var(--bg-deep);
+      border-top: 1px solid var(--border-dim);
+      padding: 12px 24px;
+    }
+
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .log-header h4 {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .log-content {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-dim);
+      border-radius: 8px;
+      padding: 10px 12px;
+      max-height: 100px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    /* Hidden inputs */
+    input[type="file"] { display: none; }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-deep);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-active);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+  </style>
+
+  <script>
+    // 预定义 OpenCV 回调函数（必须在 opencv.js 加载前定义）
+    var cvReadyResolve = null;
+    var cvReadyPromise = new Promise(function(resolve) { cvReadyResolve = resolve; });
+    
+    function onOpenCvReady() {
+      if (cvReadyResolve) cvReadyResolve('ready');
+    }
+    
+    function onOpenCvError() {
+      if (cvReadyResolve) cvReadyResolve('error');
+    }
+  </script>
+  <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()" onerror="onOpenCvError()"></script>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo">ROI</div>
+        <div class="brand-text">
+          <h1>探头ROI检测</h1>
+          <div class="sub">自动识别绿框ROI → 映射配准 → 判断探头插入状态</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-chip" id="cvStatus">
+          <span class="status-dot"></span>
+          <span>OpenCV 加载中</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 主对比区域 -->
+    <section class="comparison-section">
+      <!-- 左侧：实际接线图 -->
+      <div class="compare-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon input">📷</span>
+            <span>实际接线板照片</span>
+          </div>
+          <div class="panel-actions">
+            <button class="btn" onclick="document.getElementById('testInput').click()">上传照片</button>
+            <button class="btn danger sm" onclick="clearTest()">清除</button>
+          </div>
+        </div>
+        <div class="canvas-area" id="testArea">
+          <div class="upload-placeholder" id="testPlaceholder" onclick="document.getElementById('testInput').click()">
+            <div class="upload-icon">📤</div>
+            <div class="upload-text">
+              <h4>上传实际接线板照片</h4>
+              <p>点击或拖拽上传需要检测的照片</p>
+            </div>
+          </div>
+          <div class="canvas-wrapper" id="testWrapper" style="display: none;">
+            <canvas id="testCanvas"></canvas>
+          </div>
+        </div>
+        <input id="testInput" type="file" accept="image/*" />
+      </div>
+
+      <!-- 右侧：检测结果 -->
+      <div class="compare-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon output">🎯</span>
+            <span>检测结果</span>
+          </div>
+          <div class="panel-actions">
+            <button class="btn primary" id="runBtn" onclick="runDetection()" disabled>
+              <span>🔎</span>
+              <span>开始检测</span>
+            </button>
+          </div>
+        </div>
+        <div class="canvas-area" id="outArea">
+          <div class="result-overlay">
+            <div class="result-badge warn" id="resultBadge">
+              <span class="result-icon">⏳</span>
+              <span>等待检测</span>
+            </div>
+          </div>
+          <div class="canvas-wrapper" id="outWrapper" style="display: none;">
+            <canvas id="outCanvas"></canvas>
+          </div>
+          <div class="upload-placeholder" id="outPlaceholder" style="cursor: default; border-style: solid; border-color: var(--border-dim);">
+            <div class="upload-icon" style="opacity: 0.5;">🎯</div>
+            <div class="upload-text">
+              <h4>检测结果将在此显示</h4>
+              <p>请先上传参照图和实际照片，然后点击"开始检测"</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 控制面板 -->
+    <div class="control-panel">
+      <div class="control-inner">
+        <div class="control-group">
+          <div class="control-item">
+            <label>变化阈值</label>
+            <input type="range" id="diffTh" min="0.05" max="0.50" step="0.01" value="0.18" />
+            <span class="value" id="diffVal">0.18</span>
+          </div>
+          <div class="control-item">
+            <label>边缘阈值</label>
+            <input type="range" id="edgeTh" min="0.01" max="0.30" step="0.01" value="0.15" />
+            <span class="value" id="edgeVal">0.15</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <span style="font-size: 0.8rem; color: var(--text-muted);">💡 阈值越低越敏感</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 参照图区域（可折叠） -->
+    <section class="reference-section" id="refSection">
+      <div class="reference-header" onclick="toggleRefSection()">
+        <div class="reference-title">
+          <span class="chevron">▼</span>
+          <span>📋 参照图设置（带绿框截图）</span>
+          <span id="roiStatus" style="font-size: 0.75rem; color: var(--text-muted); margin-left: 8px;">未设置</span>
+        </div>
+        <button class="btn sm" onclick="event.stopPropagation(); document.getElementById('refInput').click()">上传参照图</button>
+      </div>
+      <div class="reference-content">
+        <div class="reference-grid">
+          <div class="ref-card">
+            <h4>带绿框的截图（定义ROI位置）</h4>
+            <div class="ref-canvas-wrap">
+              <canvas id="refCanvas"></canvas>
+            </div>
+            <div class="ref-actions">
+              <button class="btn sm" onclick="document.getElementById('refInput').click()">📤 上传截图</button>
+              <button class="btn danger sm" onclick="clearRef()">清除</button>
+            </div>
+          </div>
+          <div class="ref-card">
+            <h4>使用说明</h4>
+            <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.8; padding: 10px;">
+              <p>1️⃣ 上传带有<strong style="color: var(--accent-cyan);">绿框标注</strong>的截图作为参照</p>
+              <p>2️⃣ 程序自动识别绿框位置作为检测ROI区域</p>
+              <p>3️⃣ 上传实际接线板照片进行检测</p>
+              <p>4️⃣ 通过<strong style="color: var(--accent-cyan);">ORB+RANSAC</strong>特征配准映射ROI</p>
+              <p>5️⃣ 分析ROI区域变化判断探头插入状态</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <input id="refInput" type="file" accept="image/*" />
+    </section>
+
+    <!-- 日志 -->
+    <section class="log-section">
+      <div class="log-header">
+        <h4>📝 运行日志</h4>
+      </div>
+      <div class="log-content" id="log">等待操作...</div>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      cvReady: false,
+      refImg: null,
+      testImg: null,
+      roi: null,
+      roiInner: null,
+      refRoiMatGray: null,
+      refScale: 1,
+      testScale: 1,
+    };
+
+    const el = (id) => document.getElementById(id);
+    const logEl = el('log');
+
+    function log(msg) {
+      const ts = new Date().toLocaleTimeString();
+      logEl.textContent = `[${ts}] ${msg}\n` + logEl.textContent;
+    }
+
+    function setCvStatus(text, ready = false, error = false) {
+      const node = el('cvStatus');
+      node.innerHTML = `<span class="status-dot"></span><span>${text}</span>`;
+      node.className = 'status-chip' + (ready ? ' ready' : '') + (error ? ' error' : '');
+    }
+
+    // 等待 OpenCV 加载完成
+    cvReadyPromise.then(function(status) {
+      if (status === 'ready') {
+        const wait = () => {
+          if (typeof cv !== 'undefined' && cv.Mat) {
+            state.cvReady = true;
+            setCvStatus('OpenCV 就绪', true);
+            updateRunBtn();
+            log('OpenCV.js 已加载完成');
+          } else {
+            setTimeout(wait, 50);
+          }
+        };
+        wait();
+      } else {
+        state.cvReady = false;
+        setCvStatus('OpenCV 加载失败', false, true);
+        log('OpenCV.js 加载失败');
+        updateRunBtn();
+      }
+    });
+
+    // Toggle reference section
+    function toggleRefSection() {
+      el('refSection').classList.toggle('expanded');
+    }
+
+    // ---------- Canvas & Image ----------
+    const refCanvas = el('refCanvas');
+    const testCanvas = el('testCanvas');
+    const outCanvas = el('outCanvas');
+
+    const refCtx = refCanvas.getContext('2d');
+    const testCtx = testCanvas.getContext('2d');
+    const outCtx = outCanvas.getContext('2d');
+
+    function fitCanvasToImage(canvas, img, maxW = 900, maxH = 520) {
+      let w = img.naturalWidth || img.width;
+      let h = img.naturalHeight || img.height;
+      const s = Math.min(maxW / w, maxH / h, 1);
+      canvas.width = Math.round(w * s);
+      canvas.height = Math.round(h * s);
+      return s;
+    }
+
+    function imageToCanvas(img) {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth || img.width;
+      c.height = img.naturalHeight || img.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      return c;
+    }
+
+    function drawImage(canvas, ctx, img) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    }
+
+    function clearRef() {
+      state.refImg = null;
+      state.roi = null;
+      state.roiInner = null;
+      if (state.refRoiMatGray) { state.refRoiMatGray.delete(); state.refRoiMatGray = null; }
+      refCtx.clearRect(0, 0, refCanvas.width, refCanvas.height);
+      refCanvas.width = 300;
+      refCanvas.height = 160;
+      outCtx.clearRect(0, 0, outCanvas.width, outCanvas.height);
+      el('outWrapper').style.display = 'none';
+      el('outPlaceholder').style.display = 'flex';
+      el('roiStatus').textContent = '未设置';
+      el('roiStatus').style.color = 'var(--text-muted)';
+      log('已清除参照截图');
+      updateRunBtn();
+      updateResultBadge('等待检测', 'warn');
+    }
+
+    function clearTest() {
+      state.testImg = null;
+      testCtx.clearRect(0, 0, testCanvas.width, testCanvas.height);
+      el('testWrapper').style.display = 'none';
+      el('testPlaceholder').style.display = 'flex';
+      outCtx.clearRect(0, 0, outCanvas.width, outCanvas.height);
+      el('outWrapper').style.display = 'none';
+      el('outPlaceholder').style.display = 'flex';
+      log('已清除实际照片');
+      updateRunBtn();
+      updateResultBadge('等待检测', 'warn');
+    }
+
+    el('refInput').addEventListener('change', (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const img = new Image();
+      img.onload = () => {
+        state.refImg = img;
+        // 保持与原版一致的尺寸，确保特征匹配精度
+        state.refScale = fitCanvasToImage(refCanvas, img, 900, 520);
+        drawImage(refCanvas, refCtx, img);
+        log('参照截图已加载');
+        
+        const roi = detectGreenRoi(refCanvas, refCtx);
+        if (!roi) {
+          log('未检测到绿框ROI');
+          el('roiStatus').textContent = '未检测到绿框';
+          el('roiStatus').style.color = 'var(--accent-red)';
+          updateResultBadge('未检测到绿框', 'no');
+        } else {
+          state.roi = roi;
+          state.roiInner = shrinkRoi(roi, 6);
+          drawRoiOnRef();
+          el('roiStatus').textContent = `已识别 (${roi.w}×${roi.h})`;
+          el('roiStatus').style.color = 'var(--accent-green)';
+          log(`已识别绿框ROI：x=${roi.x},y=${roi.y},w=${roi.w},h=${roi.h}`);
+          updateResultBadge('已识别ROI', 'ok');
+        }
+        updateRunBtn();
+      };
+      img.src = URL.createObjectURL(f);
+    });
+
+    el('testInput').addEventListener('change', (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const img = new Image();
+      img.onload = () => {
+        state.testImg = img;
+        // 保持与原版一致的尺寸，确保特征匹配精度
+        state.testScale = fitCanvasToImage(testCanvas, img, 900, 520);
+        drawImage(testCanvas, testCtx, img);
+        el('testPlaceholder').style.display = 'none';
+        el('testWrapper').style.display = 'block';
+        log('实际照片已加载');
+        updateRunBtn();
+      };
+      img.src = URL.createObjectURL(f);
+    });
+
+    // ---------- ROI Detection ----------
+    function isGreenPixel(r, g, b) {
+      return (g > 120 && b > 80 && r < 120) && (g - r > 40) && (g - b > -30);
+    }
+
+    function detectGreenRoi(canvas, ctx) {
+      const { width, height } = canvas;
+      const imgData = ctx.getImageData(0, 0, width, height);
+      const data = imgData.data;
+
+      const mask = new Uint8Array(width * height);
+      for (let i = 0; i < width * height; i++) {
+        const r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2];
+        mask[i] = isGreenPixel(r, g, b) ? 1 : 0;
+      }
+
+      const visited = new Uint8Array(width * height);
+      let best = null;
+
+      const dirs = [-1, 1, -width, width];
+      for (let idx = 0; idx < mask.length; idx++) {
+        if (!mask[idx] || visited[idx]) continue;
+        const q = [idx];
+        visited[idx] = 1;
+        let minX = width, minY = height, maxX = 0, maxY = 0, area = 0;
+        while (q.length) {
+          const cur = q.pop();
+          area++;
+          const y = Math.floor(cur / width);
+          const x = cur - y * width;
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+          for (const d of dirs) {
+            const nxt = cur + d;
+            if (nxt < 0 || nxt >= mask.length) continue;
+            if (d === -1 && cur % width === 0) continue;
+            if (d === 1 && cur % width === width - 1) continue;
+            if (mask[nxt] && !visited[nxt]) {
+              visited[nxt] = 1;
+              q.push(nxt);
+            }
+          }
+        }
+
+        const w = (maxX - minX + 1);
+        const h = (maxY - minY + 1);
+        const aspect = w / Math.max(1, h);
+        const boxArea = w * h;
+        const fill = area / Math.max(1, boxArea);
+
+        if (boxArea < 800 || boxArea > width * height * 0.25) continue;
+        if (aspect > 3.0 || aspect < 0.33) continue;
+        if (fill > 0.85) continue;
+
+        const squareScore = 1 - Math.min(1, Math.abs(Math.log(aspect)));
+        const sizeScore = Math.min(1, boxArea / (width * height * 0.06));
+        const fillScore = 1 - Math.min(1, Math.abs(fill - 0.25) / 0.25);
+        const score = squareScore * 0.5 + sizeScore * 0.3 + fillScore * 0.2;
+
+        if (!best || score > best.score) {
+          best = { x: minX, y: minY, w, h, score };
+        }
+      }
+
+      if (!best) return null;
+      return { x: best.x, y: best.y, w: best.w, h: best.h };
+    }
+
+    function shrinkRoi(roi, pad) {
+      const x = Math.max(0, roi.x + pad);
+      const y = Math.max(0, roi.y + pad);
+      const w = Math.max(10, roi.w - pad * 2);
+      const h = Math.max(10, roi.h - pad * 2);
+      return { x, y, w, h };
+    }
+
+    function drawRoiOnRef() {
+      if (!state.refImg) return;
+      drawImage(refCanvas, refCtx, state.refImg);
+      if (!state.roi) return;
+      refCtx.lineWidth = 3;
+      refCtx.strokeStyle = 'rgba(6, 182, 212, 0.95)';
+      refCtx.strokeRect(state.roi.x, state.roi.y, state.roi.w, state.roi.h);
+      if (state.roiInner) {
+        refCtx.lineWidth = 2;
+        refCtx.strokeStyle = 'rgba(34, 197, 94, 0.95)';
+        refCtx.strokeRect(state.roiInner.x, state.roiInner.y, state.roiInner.w, state.roiInner.h);
+      }
+    }
+
+    function updateRunBtn() {
+      el('runBtn').disabled = !(state.cvReady && state.refImg && state.testImg && state.roiInner);
+    }
+
+    function updateResultBadge(text, kind) {
+      const b = el('resultBadge');
+      const icons = { ok: '✅', no: '❌', warn: '⏳' };
+      b.innerHTML = `<span class="result-icon">${icons[kind] || '⏳'}</span><span>${text}</span>`;
+      b.className = `result-badge ${kind}`;
+    }
+
+    // ---------- Core Detection ----------
+    function removeGreenOverlay(matBgr) {
+      const hsv = new cv.Mat();
+      cv.cvtColor(matBgr, hsv, cv.COLOR_BGR2HSV);
+      const lower = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [65, 60, 60, 0]);
+      const upper = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [100, 255, 255, 255]);
+      const mask = new cv.Mat();
+      cv.inRange(hsv, lower, upper, mask);
+      const inpainted = new cv.Mat();
+      cv.inpaint(matBgr, mask, inpainted, 3, cv.INPAINT_TELEA);
+      hsv.delete(); lower.delete(); upper.delete(); mask.delete();
+      matBgr.delete();
+      return inpainted;
+    }
+
+    function getHomographyFromCanvases(refCanvas, testCanvas) {
+      const refMat = cv.imread(refCanvas);
+      const testMat = cv.imread(testCanvas);
+      const refBgr = new cv.Mat();
+      const testBgr = new cv.Mat();
+      cv.cvtColor(refMat, refBgr, cv.COLOR_RGBA2BGR);
+      cv.cvtColor(testMat, testBgr, cv.COLOR_RGBA2BGR);
+      refMat.delete(); testMat.delete();
+
+      const refClean = removeGreenOverlay(refBgr);
+      const testClean = testBgr;
+
+      const refGray = new cv.Mat();
+      const testGray = new cv.Mat();
+      cv.cvtColor(refClean, refGray, cv.COLOR_BGR2GRAY);
+      cv.cvtColor(testClean, testGray, cv.COLOR_BGR2GRAY);
+      refClean.delete(); testClean.delete();
+
+      const orb = new cv.ORB(2000);
+      const kp1 = new cv.KeyPointVector();
+      const kp2 = new cv.KeyPointVector();
+      const des1 = new cv.Mat();
+      const des2 = new cv.Mat();
+
+      orb.detectAndCompute(refGray, new cv.Mat(), kp1, des1);
+      orb.detectAndCompute(testGray, new cv.Mat(), kp2, des2);
+      refGray.delete(); testGray.delete();
+      orb.delete();
+
+      if (des1.empty() || des2.empty()) {
+        kp1.delete(); kp2.delete(); des1.delete(); des2.delete();
+        throw new Error('特征点不足：请确保两张图清晰且包含足够的板子区域');
+      }
+
+      const bf = new cv.BFMatcher(cv.NORM_HAMMING, false);
+      const matches = new cv.DMatchVector();
+      bf.match(des1, des2, matches);
+      bf.delete(); des1.delete(); des2.delete();
+
+      const mArr = [];
+      for (let i = 0; i < matches.size(); i++) {
+        mArr.push(matches.get(i));
+      }
+      matches.delete();
+      mArr.sort((a, b) => a.distance - b.distance);
+      const keep = Math.min(120, Math.max(30, Math.floor(mArr.length * 0.15)));
+      const good = mArr.slice(0, keep);
+
+      const srcPts = [];
+      const dstPts = [];
+      for (const m of good) {
+        const p1 = kp1.get(m.queryIdx).pt;
+        const p2 = kp2.get(m.trainIdx).pt;
+        srcPts.push(p1.x, p1.y);
+        dstPts.push(p2.x, p2.y);
+      }
+      kp1.delete(); kp2.delete();
+
+      const srcMat = cv.matFromArray(good.length, 1, cv.CV_32FC2, srcPts);
+      const dstMat = cv.matFromArray(good.length, 1, cv.CV_32FC2, dstPts);
+      const mask = new cv.Mat();
+      const H = cv.findHomography(srcMat, dstMat, cv.RANSAC, 5, mask);
+      srcMat.delete(); dstMat.delete(); mask.delete();
+
+      if (H.empty()) {
+        H.delete();
+        throw new Error('单应矩阵计算失败：请确保两张图是同一块板且有足够重叠区域');
+      }
+      return H;
+    }
+
+    function warpRoiFromTestToRef(testCanvas, H, roiInner, outW, outH) {
+      const testMat = cv.imread(testCanvas);
+      const testBgr = new cv.Mat();
+      cv.cvtColor(testMat, testBgr, cv.COLOR_RGBA2BGR);
+      testMat.delete();
+
+      const Hinv = new cv.Mat();
+      cv.invert(H, Hinv);
+
+      const warped = new cv.Mat();
+      const dsize = new cv.Size(outW, outH);
+      cv.warpPerspective(testBgr, warped, Hinv, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+      testBgr.delete();
+      Hinv.delete();
+
+      const rect = new cv.Rect(roiInner.x, roiInner.y, roiInner.w, roiInner.h);
+      const roiMat = warped.roi(rect);
+      warped.delete();
+      return roiMat;
+    }
+
+    function matToGray(matBgr) {
+      const gray = new cv.Mat();
+      cv.cvtColor(matBgr, gray, cv.COLOR_BGR2GRAY);
+      return gray;
+    }
+
+    function computeDiffMetrics(refGray, testGray) {
+      const blurRef = new cv.Mat();
+      const blurTest = new cv.Mat();
+      cv.GaussianBlur(refGray, blurRef, new cv.Size(5,5), 0);
+      cv.GaussianBlur(testGray, blurTest, new cv.Size(5,5), 0);
+
+      const diff = new cv.Mat();
+      cv.absdiff(blurRef, blurTest, diff);
+      blurRef.delete(); blurTest.delete();
+
+      const mean = cv.mean(diff)[0] / 255.0;
+
+      const edges = new cv.Mat();
+      cv.Canny(testGray, edges, 80, 160);
+      const edgeCount = cv.countNonZero(edges);
+      const edgeRatio = edgeCount / (testGray.rows * testGray.cols);
+      edges.delete(); diff.delete();
+
+      return { meanDiff: mean, edgeRatio };
+    }
+
+    function drawResultOverlay(roiInner, H, decision, metrics) {
+      outCanvas.width = testCanvas.width;
+      outCanvas.height = testCanvas.height;
+      outCtx.clearRect(0, 0, outCanvas.width, outCanvas.height);
+      outCtx.drawImage(testCanvas, 0, 0);
+
+      el('outPlaceholder').style.display = 'none';
+      el('outWrapper').style.display = 'block';
+
+      const pts = cv.matFromArray(4, 1, cv.CV_32FC2, [
+        roiInner.x, roiInner.y,
+        roiInner.x + roiInner.w, roiInner.y,
+        roiInner.x + roiInner.w, roiInner.y + roiInner.h,
+        roiInner.x, roiInner.y + roiInner.h
+      ]);
+      const dst = new cv.Mat();
+      cv.perspectiveTransform(pts, dst, H);
+      pts.delete();
+
+      const arr = dst.data32F;
+      dst.delete();
+
+      // Draw polygon
+      outCtx.lineWidth = 4;
+      outCtx.strokeStyle = decision.hasProbe ? 'rgba(34, 197, 94, 0.95)' : 'rgba(239, 68, 68, 0.95)';
+      outCtx.fillStyle = decision.hasProbe ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+      outCtx.beginPath();
+      outCtx.moveTo(arr[0] * state.testScale, arr[1] * state.testScale);
+      outCtx.lineTo(arr[2] * state.testScale, arr[3] * state.testScale);
+      outCtx.lineTo(arr[4] * state.testScale, arr[5] * state.testScale);
+      outCtx.lineTo(arr[6] * state.testScale, arr[7] * state.testScale);
+      outCtx.closePath();
+      outCtx.fill();
+      outCtx.stroke();
+
+      // Label
+      const label = decision.hasProbe ? 'P21 已插探头' : 'P21 未检测到探头';
+      const detail = `diff: ${metrics.meanDiff.toFixed(3)} | edge: ${metrics.edgeRatio.toFixed(3)}`;
+      
+      outCtx.font = 'bold 16px "Noto Sans SC"';
+      const pad = 12;
+      const labelW = outCtx.measureText(label).width + pad * 2;
+      
+      outCtx.font = '12px "Space Mono"';
+      const detailW = outCtx.measureText(detail).width + pad * 2;
+      
+      const boxW = Math.max(labelW, detailW);
+      const boxH = 52;
+      const x = Math.max(10, Math.min(outCanvas.width - boxW - 10, arr[0] * state.testScale));
+      const y = Math.max(60, Math.min(outCanvas.height - 10, arr[1] * state.testScale)) - boxH;
+
+      // Background
+      outCtx.fillStyle = decision.hasProbe ? 'rgba(34, 197, 94, 0.95)' : 'rgba(239, 68, 68, 0.95)';
+      outCtx.beginPath();
+      outCtx.roundRect(x, y, boxW, boxH, 8);
+      outCtx.fill();
+
+      // Text
+      outCtx.fillStyle = '#fff';
+      outCtx.font = 'bold 15px "Noto Sans SC"';
+      outCtx.fillText(label, x + pad, y + 22);
+      outCtx.font = '11px "Space Mono"';
+      outCtx.fillStyle = 'rgba(255,255,255,0.8)';
+      outCtx.fillText(detail, x + pad, y + 40);
+    }
+
+    async function runDetection() {
+      try {
+        if (!state.cvReady) throw new Error('OpenCV未就绪');
+        if (!state.refImg || !state.testImg || !state.roiInner) throw new Error('请先上传两张图，并确保识别到ROI');
+
+        const diffTh = parseFloat(el('diffTh').value);
+        const edgeTh = parseFloat(el('edgeTh').value);
+        el('diffVal').textContent = diffTh.toFixed(2);
+        el('edgeVal').textContent = edgeTh.toFixed(2);
+
+        drawRoiOnRef();
+        log('开始计算单应矩阵（ORB+RANSAC）...');
+        updateResultBadge('检测中...', 'warn');
+
+        const refFullCanvas = imageToCanvas(state.refImg);
+        const testFullCanvas = imageToCanvas(state.testImg);
+
+        const H = getHomographyFromCanvases(refFullCanvas, testFullCanvas);
+        log('单应矩阵计算成功');
+
+        // ROI 坐标映射到原图分辨率
+        const roiFull = {
+          x: Math.round(state.roiInner.x / state.refScale),
+          y: Math.round(state.roiInner.y / state.refScale),
+          w: Math.round(state.roiInner.w / state.refScale),
+          h: Math.round(state.roiInner.h / state.refScale),
+        };
+
+        const refMatRgba = cv.imread(refFullCanvas);
+        const refBgr = new cv.Mat();
+        cv.cvtColor(refMatRgba, refBgr, cv.COLOR_RGBA2BGR);
+        refMatRgba.delete();
+        const refRoiBgr = refBgr.roi(new cv.Rect(roiFull.x, roiFull.y, roiFull.w, roiFull.h));
+        refBgr.delete();
+        const refGray = matToGray(refRoiBgr);
+        refRoiBgr.delete();
+
+        const testRoiBgr = warpRoiFromTestToRef(testFullCanvas, H, roiFull, refFullCanvas.width, refFullCanvas.height);
+        const testGray = matToGray(testRoiBgr);
+        testRoiBgr.delete();
+
+        const metrics = computeDiffMetrics(refGray, testGray);
+        refGray.delete(); testGray.delete();
+
+        const hasProbe = (metrics.meanDiff > diffTh) || (metrics.edgeRatio > edgeTh);
+        const decision = { hasProbe };
+
+        updateResultBadge(hasProbe ? '已插探头' : '未插探头', hasProbe ? 'ok' : 'no');
+        log(`变化检测：meanDiff=${metrics.meanDiff.toFixed(4)}，edgeRatio=${metrics.edgeRatio.toFixed(4)} => ${hasProbe ? '插探头' : '未插探头'}`);
+
+        drawResultOverlay(roiFull, H, decision, metrics);
+        H.delete();
+      } catch (e) {
+        updateResultBadge('检测失败', 'no');
+        log(`检测失败：${e.message || e}`);
+      }
+    }
+
+    // Slider events
+    el('diffTh').addEventListener('input', () => el('diffVal').textContent = parseFloat(el('diffTh').value).toFixed(2));
+    el('edgeTh').addEventListener('input', () => el('edgeVal').textContent = parseFloat(el('edgeTh').value).toFixed(2));
+  </script>
+</body>
+</html>

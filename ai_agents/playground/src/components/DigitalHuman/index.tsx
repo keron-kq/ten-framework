@@ -36,7 +36,6 @@ export interface DigitalHumanRef {
   disconnect: () => void;
   reconnect: () => void;
   stopSpeaking: () => void;
-  updateSubtitle: (text: string) => void;
 }
 
 const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConnect?: boolean; showConnectionButton?: boolean; isPiPMode?: boolean }>(
@@ -44,7 +43,6 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
     const [sdkReady, setSdkReady] = useState(false);
     const [instance, setInstance] = useState<any>(null);
     const [status, setStatus] = useState<string>("init");
-    const [subtitle, setSubtitle] = useState<string>("");
     const containerId = "xmov-container";
 
     // Polyfill for potential SDK bug (windows vs window)
@@ -190,9 +188,6 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
             console.error("[DigitalHuman] Stop speaking error:", e);
           }
         }
-      },
-      updateSubtitle: (text: string) => {
-        setSubtitle(text);
       }
     }));
 
@@ -387,7 +382,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
         {/* Container for the Digital Human Canvas - Pure container for SDK, no React children */}
         <div 
             id={containerId} 
-            className="w-full h-full bg-gradient-to-b from-black/30 to-black/10 hide-sdk-subtitle"
+            className="w-full h-full bg-gradient-to-b from-black/30 to-black/10"
             style={{ 
                 width: "100%", 
                 height: "100%",
@@ -396,29 +391,6 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
                 zIndex: 1
             }}
         />
-        
-        {/* Hide SDK built-in subtitle with comprehensive selectors */}
-        <style jsx global>{`
-          /* Hide all possible SDK subtitle elements */
-          #xmov-container div[style*="position: absolute"][style*="bottom"],
-          #xmov-container div[style*="text-align: center"],
-          #xmov-container [class*="subtitle"],
-          #xmov-container [class*="caption"],
-          #xmov-container [class*="text"],
-          #xmov-container [id*="subtitle"],
-          .xmov-subtitle,
-          .ttsa-subtitle,
-          .avatar-subtitle {
-            display: none !important;
-            opacity: 0 !important;
-            visibility: hidden !important;
-          }
-          
-          /* Only allow our custom subtitle to show */
-          #xmov-container {
-            overflow: hidden;
-          }
-        `}</style>
 
         {/* RIGOL Logo Overlay - Top Left */}
         {!isPiPMode && (
@@ -452,20 +424,6 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
             </div>
         )}
 
-        {/* Subtitle Area - Bottom */}
-        {subtitle && status === "connected" && !isPiPMode && (
-            <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
-                <div className="bg-gradient-to-t from-black/70 via-black/40 to-transparent px-4 py-2 pb-3">
-                    <div className="text-center text-white text-sm leading-relaxed tracking-wide" 
-                         style={{ 
-                           textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                           fontWeight: 400
-                         }}>
-                        {subtitle}
-                    </div>
-                </div>
-            </div>
-        )}
       </div>
     );
   }

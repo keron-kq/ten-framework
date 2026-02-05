@@ -18,7 +18,7 @@ const DynamicChatCard = dynamic(() => import("@/components/Chat/ChatCard"), {
   ssr: false,
 });
 
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink, Monitor } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ExternalLink, Monitor, Play, Globe, QrCode, Hand, TestTube, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ActionBar from "@/components/Layout/Action";
 
@@ -27,6 +27,7 @@ import { type IChatItem, EMessageType, EMessageDataType } from "@/types"; // Imp
 import { addChatItem } from "@/store/reducers/global"; // Import action creator
 import { useAppDispatch } from "@/common"; // Ensure useAppDispatch is imported
 import { ExternalAppWindow } from "@/components/ExternalAppWindow";
+import { MediaWindow } from "@/components/MediaWindow";
 
 export default function Home() {
   const dispatch = useAppDispatch(); // Add dispatch hook
@@ -57,8 +58,19 @@ export default function Home() {
   const [vadConsecutive, setVadConsecutive] = React.useState(2);
   const isDigitalHumanSpeakingRef = React.useRef<boolean>(false);
   const [showExternalApp, setShowExternalApp] = React.useState(false);
+  const [showExternalApp2, setShowExternalApp2] = React.useState(false);
+  const [showGestureApp, setShowGestureApp] = React.useState(false);
+  const [showConsistencyApp, setShowConsistencyApp] = React.useState(false);
+  const [showInteractiveHTML, setShowInteractiveHTML] = React.useState(false);
+  const [showDS7000, setShowDS7000] = React.useState(false);
+  const [showQRCode, setShowQRCode] = React.useState(false);
   const [externalAppExpanded, setExternalAppExpanded] = React.useState(false);
-  const [currentSubtitle, setCurrentSubtitle] = React.useState<string>("");
+  const [externalApp2Expanded, setExternalApp2Expanded] = React.useState(false);
+  const [gestureAppExpanded, setGestureAppExpanded] = React.useState(false);
+  const [consistencyAppExpanded, setConsistencyAppExpanded] = React.useState(false);
+  const [interactiveHTMLExpanded, setInteractiveHTMLExpanded] = React.useState(false);
+  const [ds7000Expanded, setDS7000Expanded] = React.useState(false);
+  const [qrCodeExpanded, setQRCodeExpanded] = React.useState(false);
 
   React.useEffect(() => {
     // Initialize BroadcastChannel
@@ -82,8 +94,6 @@ export default function Home() {
             isDigitalHumanSpeakingRef.current = false;
             const { rtcManager } = require("../manager/rtc/rtc");
             rtcManager.setDigitalHumanSpeaking(false);
-            // Clear global subtitle when user interrupts
-            setCurrentSubtitle("");
             
             // Only interrupt ONCE per user turn to avoid spamming the SDK
             if (!isInterruptedRef.current) {
@@ -197,19 +207,11 @@ export default function Home() {
                     // Call speak with buffered content
                     if (!isProjectionModeRef.current) {
                         digitalHumanRef.current?.speak(textToSend, isStart, isEnd);
-                        // Update subtitle with current sentence (not full text)
-                        digitalHumanRef.current?.updateSubtitle(textToSend);
-                        // Also update global subtitle state for PiP mode
-                        setCurrentSubtitle(textToSend);
                     } else {
                         console.log(`[page.tsx] 📡 Sending SPEAK command to projection: "${textToSend}"`);
                         broadcastChannelRef.current?.postMessage({
                             type: "speak",
                             payload: { text: textToSend, isStart, isEnd }
-                        });
-                        broadcastChannelRef.current?.postMessage({
-                            type: "subtitle",
-                            payload: { text: textToSend }
                         });
                     }
                     
@@ -220,22 +222,9 @@ export default function Home() {
                         rtcManager.setDigitalHumanSpeaking(true);
                     }
                     if (isEnd) {
-                        console.log("[page.tsx] 🏁 Speech ended, clearing subtitle");
                         isDigitalHumanSpeakingRef.current = false;
                         const { rtcManager } = require("../manager/rtc/rtc");
                         rtcManager.setDigitalHumanSpeaking(false);
-                        // Clear subtitle when speech ends (with small delay for smooth transition)
-                        setTimeout(() => {
-                            if (!isProjectionModeRef.current) {
-                                digitalHumanRef.current?.updateSubtitle("");
-                                setCurrentSubtitle("");  // Also clear global subtitle
-                            } else {
-                                broadcastChannelRef.current?.postMessage({
-                                    type: "subtitle",
-                                    payload: { text: "" }
-                                });
-                            }
-                        }, 500);  // 500ms delay before clearing
                     }
                     
                     // Clear buffer and update flags
@@ -346,6 +335,11 @@ export default function Home() {
     rtcManager.updateVADConsecutive(consecutive);
   };
 
+  const handlePlayVideo = (videoId: string) => {
+    // 打开新窗口播放视频（全屏）
+    window.open(`/video/${videoId}`, `Video${videoId}`, "width=1920,height=1080");
+  };
+
   const handleSpeak = (text: string) => {
     console.log(`[page.tsx] 🎬 Manual speak triggered: "${text.substring(0, 20)}..."`);
     
@@ -382,31 +376,9 @@ export default function Home() {
             type: "speak",
             payload: { text, isStart: true, isEnd: true }
         });
-        broadcastChannelRef.current?.postMessage({
-            type: "subtitle",
-            payload: { text: text }
-        });
-        
-        // Clear subtitle after estimated duration (投屏模式)
-        setTimeout(() => {
-            broadcastChannelRef.current?.postMessage({
-                type: "subtitle",
-                payload: { text: "" }
-            });
-        }, estimatedDuration);
     } else {
-        setCurrentSubtitle(text);  // Update global subtitle for greeting
-        
         if (digitalHumanRef.current?.isConnected()) {
             digitalHumanRef.current.speak(text, true, true);
-            // Update subtitle for greeting
-            digitalHumanRef.current.updateSubtitle(text);
-            
-            // Clear subtitle after estimated duration
-            setTimeout(() => {
-                digitalHumanRef.current?.updateSubtitle("");
-                setCurrentSubtitle("");
-            }, estimatedDuration);
         } else {
             console.warn("[page.tsx] ❌ Digital Human not connected, cannot speak");
         }
@@ -440,14 +412,14 @@ export default function Home() {
                 isSidebarOpen ? "w-[400px]" : "w-0 border-none"
             )}>
                 <div className="h-full w-[400px]">
-                   <DynamicRTCCard
-                        className={cn(
+          <DynamicRTCCard
+            className={cn(
                         "m-0 flex w-full h-full flex-1 bg-[#181a1d]",
-                        {
-                            ["hidden md:flex"]: mobileActiveTab === EMobileActiveTab.CHAT,
-                        }
-                        )}
-                    />
+              {
+                ["hidden md:flex"]: mobileActiveTab === EMobileActiveTab.CHAT,
+              }
+            )}
+          />
                 </div>
             </div>
 
@@ -488,7 +460,67 @@ export default function Home() {
                         <ExternalLink className="h-4 w-4" />
                     </Button>
                     
-                    {/* External App Button */}
+                    {/* 1. Video 2 Button (aihistory) */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full border border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)] transition-all"
+                        title="aihistory"
+                        onClick={() => handlePlayVideo("2")}
+                    >
+                        <Play className="h-4 w-4 fill-[#FFCC00]" />
+                    </Button>
+                    
+                    {/* 2. Video 1 Button (MV) */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full border border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)] transition-all"
+                        title="MV"
+                        onClick={() => handlePlayVideo("1")}
+                    >
+                        <Play className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* 3. External App 2 (人脸检测) */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-8 w-8 rounded-full border transition-all ${
+                            showExternalApp2 
+                                ? "border-green-500 bg-green-500/20 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                                : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
+                        }`}
+                        title={showExternalApp2 ? "关闭人脸检测" : "人脸检测"}
+                        onClick={() => {
+                            const newState = !showExternalApp2;
+                            setShowExternalApp2(newState);
+                            setExternalApp2Expanded(newState);
+                        }}
+                    >
+                        <Globe className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* 4. QR Code */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-8 w-8 rounded-full border transition-all ${
+                            showQRCode 
+                                ? "border-green-500 bg-green-500/20 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                                : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
+                        }`}
+                        title={showQRCode ? "关闭二维码" : "显示二维码"}
+                        onClick={() => {
+                            const newState = !showQRCode;
+                            setShowQRCode(newState);
+                            setQRCodeExpanded(newState);
+                        }}
+                    >
+                        <QrCode className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* 5. Web Control */}
                     <Button
                         variant="outline"
                         size="icon"
@@ -497,10 +529,90 @@ export default function Home() {
                                 ? "border-green-500 bg-green-500/20 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
                                 : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
                         }`}
-                        title={showExternalApp ? "关闭外部应用" : "显示外部应用"}
-                        onClick={() => setShowExternalApp(!showExternalApp)}
+                        title={showExternalApp ? "关闭 Web Control" : "Web Control"}
+                        onClick={() => {
+                            const newState = !showExternalApp;
+                            setShowExternalApp(newState);
+                            setExternalAppExpanded(newState);
+                        }}
                     >
                         <Monitor className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* 6. Gesture Recognition (手势识别) */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-8 w-8 rounded-full border transition-all ${
+                            showGestureApp 
+                                ? "border-green-500 bg-green-500/20 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                                : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
+                        }`}
+                        title={showGestureApp ? "关闭手势识别" : "手势识别"}
+                        onClick={() => {
+                            const newState = !showGestureApp;
+                            setShowGestureApp(newState);
+                            setGestureAppExpanded(newState);
+                        }}
+                    >
+                        <Hand className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* 7. Interactive HTML (插线检测) */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-8 w-8 rounded-full border transition-all ${
+                            showInteractiveHTML 
+                                ? "border-green-500 bg-green-500/20 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                                : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
+                        }`}
+                        title={showInteractiveHTML ? "关闭插线检测" : "插线检测"}
+                        onClick={() => {
+                            const newState = !showInteractiveHTML;
+                            setShowInteractiveHTML(newState);
+                            setInteractiveHTMLExpanded(newState);
+                        }}
+                    >
+                        <FileText className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* 8. DS70000 */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-8 w-8 rounded-full border transition-all ${
+                            showDS7000 
+                                ? "border-green-500 bg-green-500/20 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                                : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
+                        }`}
+                        title={showDS7000 ? "关闭DS70000" : "DS70000"}
+                        onClick={() => {
+                            const newState = !showDS7000;
+                            setShowDS7000(newState);
+                            setDS7000Expanded(newState);
+                        }}
+                    >
+                        <Monitor className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* 9. Consistency Test (一致性测试) */}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-8 w-8 rounded-full border transition-all ${
+                            showConsistencyApp 
+                                ? "border-green-500 bg-green-500/20 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                                : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
+                        }`}
+                        title={showConsistencyApp ? "关闭一致性测试" : "一致性测试"}
+                        onClick={() => {
+                            const newState = !showConsistencyApp;
+                            setShowConsistencyApp(newState);
+                            setConsistencyAppExpanded(newState);
+                        }}
+                    >
+                        <TestTube className="h-4 w-4" />
                     </Button>
                 </div>
             </div>
@@ -525,13 +637,13 @@ export default function Home() {
                         <DigitalHuman 
                           ref={digitalHumanRef} 
                           className="w-full h-full"
-                          isPiPMode={externalAppExpanded}
+                          isPiPMode={externalAppExpanded || externalApp2Expanded || gestureAppExpanded || consistencyAppExpanded || interactiveHTMLExpanded || ds7000Expanded || qrCodeExpanded}
                         />
                         
-                        {/* External App Window */}
+                        {/* External App Window 1 (Web Control) */}
                         {showExternalApp && (
                           <ExternalAppWindow 
-                            url="http://172.18.26.49/control.html"
+                            url="http://aidemo.rigol.com:3000/"
                             onClose={() => {
                               setShowExternalApp(false);
                               setExternalAppExpanded(false);
@@ -540,19 +652,94 @@ export default function Home() {
                           />
                         )}
                         
-                        {/* Global Subtitle (显示在 PiP 模式下) */}
-                        {currentSubtitle && externalAppExpanded && (
-                          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
-                            <div className="bg-gradient-to-t from-black/80 via-black/50 to-transparent px-6 py-3 pb-4">
-                              <div className="text-center text-white text-base leading-relaxed tracking-wide"
-                                   style={{
-                                     textShadow: '0 2px 4px rgba(0,0,0,0.8)',
-                                     fontWeight: 400
-                                   }}>
-                                {currentSubtitle}
-                              </div>
-                            </div>
-                          </div>
+                        {/* External App Window 2 */}
+                        {showExternalApp2 && (
+                          <MediaWindow 
+                            type="iframe"
+                            url="http://172.18.33.34:8000/"
+                            title="外部应用"
+                            onClose={() => {
+                              setShowExternalApp2(false);
+                              setExternalApp2Expanded(false);
+                            }}
+                            onExpandChange={setExternalApp2Expanded}
+                            initialExpanded={true}
+                          />
+                        )}
+                        
+                        {/* Gesture Recognition App */}
+                        {showGestureApp && (
+                          <MediaWindow 
+                            type="iframe"
+                            url="http://172.18.33.34:5173"
+                            title="手势识别"
+                            onClose={() => {
+                              setShowGestureApp(false);
+                              setGestureAppExpanded(false);
+                            }}
+                            onExpandChange={setGestureAppExpanded}
+                            initialExpanded={true}
+                          />
+                        )}
+                        
+                        {/* Consistency Test App */}
+                        {showConsistencyApp && (
+                          <MediaWindow 
+                            type="iframe"
+                            url="http://172.18.33.34:5000/"
+                            title="一致性测试"
+                            onClose={() => {
+                              setShowConsistencyApp(false);
+                              setConsistencyAppExpanded(false);
+                            }}
+                            onExpandChange={setConsistencyAppExpanded}
+                            initialExpanded={true}
+                          />
+                        )}
+                        
+                        {/* Interactive HTML Page */}
+                        {showInteractiveHTML && (
+                          <MediaWindow 
+                            type="iframe"
+                            url="/html/interactive.html"
+                            title="交互页面"
+                            onClose={() => {
+                              setShowInteractiveHTML(false);
+                              setInteractiveHTMLExpanded(false);
+                            }}
+                            onExpandChange={setInteractiveHTMLExpanded}
+                            initialExpanded={true}
+                          />
+                        )}
+                        
+                        {/* DS7000 App */}
+                        {showDS7000 && (
+                          <MediaWindow 
+                            type="iframe"
+                            url="http://172.18.24.199/control.html"
+                            title="DS7000"
+                            onClose={() => {
+                              setShowDS7000(false);
+                              setDS7000Expanded(false);
+                            }}
+                            onExpandChange={setDS7000Expanded}
+                            initialExpanded={true}
+                          />
+                        )}
+                        
+                        {/* QR Code Display */}
+                        {showQRCode && (
+                          <MediaWindow 
+                            type="iframe"
+                            url="/qrcode"
+                            title="扫码观看"
+                            onClose={() => {
+                              setShowQRCode(false);
+                              setQRCodeExpanded(false);
+                            }}
+                            onExpandChange={setQRCodeExpanded}
+                            initialExpanded={true}
+                          />
                         )}
                      </div>
 
@@ -598,15 +785,15 @@ export default function Home() {
                     "transition-all duration-300 ease-in-out overflow-hidden",
                     isChatOpen ? "flex-[1.5] min-h-0" : "h-0 flex-none"
                 )}>
-                    <DynamicChatCard
-                        className={cn(
+            <DynamicChatCard
+              className={cn(
                             "h-full w-full rounded-lg bg-[#181a1d] border border-[#2a2a2a]",
-                            {
-                            ["hidden md:flex"]:
-                                mobileActiveTab === EMobileActiveTab.AGENT,
-                            }
-                        )}
-                    />
+                {
+                  ["hidden md:flex"]:
+                    mobileActiveTab === EMobileActiveTab.AGENT,
+                }
+              )}
+            />
                 </div>
             </div>
         </div>
