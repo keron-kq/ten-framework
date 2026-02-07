@@ -37,18 +37,20 @@ const AuthInitializer = (props: AuthInitializerProps) => {
       const options = getOptionsFromLocal();
       const trulienceSettings = getTrulienceSettingsFromLocal();
       initialize();
-      if (options && options.channel) {
-        dispatch(reset());
-        dispatch(setOptions(options));
+      
+      // CRITICAL FIX: Always generate a new channel on page load
+      // to prevent reconnecting to a stale agent from a previous session.
+      // Reuse userId for consistency, but channel must be fresh.
+      dispatch(reset());
+      dispatch(
+        setOptions({
+          ...options,
+          channel: getRandomChannel(),  // Always new channel
+          userId: options?.userId || getRandomUserId(),
+        })
+      );
+      if (trulienceSettings) {
         dispatch(setTrulienceSettings(trulienceSettings));
-      } else {
-        dispatch(reset());
-        dispatch(
-          setOptions({
-            channel: getRandomChannel(),
-            userId: getRandomUserId(),
-          })
-        );
       }
     }
   }, [dispatch]);
