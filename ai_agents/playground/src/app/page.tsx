@@ -52,6 +52,7 @@ export default function Home() {
   const lastSentTextRef = React.useRef<string>(""); // Track what text we've already sent
   const textBufferRef = React.useRef<string>(""); // Buffer for accumulating text before sending
   const isInterruptedRef = React.useRef<boolean>(false); // Track if we have already interrupted the current turn
+  const speakTimerRef = React.useRef<NodeJS.Timeout | null>(null); // Timer for greeting duration
   const CHUNK_SIZE = 6; // Balanced chunk size for fluency and latency
   const [vadEnabled, setVadEnabled] = React.useState(true); // VAD enabled by default
   const [vadThreshold, setVadThreshold] = React.useState(15);
@@ -364,10 +365,15 @@ export default function Home() {
     const { rtcManager } = require("../manager/rtc/rtc");
     rtcManager.setDigitalHumanSpeaking(true);
     
+    // Clear previous greeting timer to prevent stale state reset
+    if (speakTimerRef.current) {
+      clearTimeout(speakTimerRef.current);
+    }
     const estimatedDuration = (text.length / 4 + 1) * 1000;
-    setTimeout(() => {
+    speakTimerRef.current = setTimeout(() => {
       isDigitalHumanSpeakingRef.current = false;
       rtcManager.setDigitalHumanSpeaking(false);
+      speakTimerRef.current = null;
     }, estimatedDuration);
 
     if (isProjectionMode) {
