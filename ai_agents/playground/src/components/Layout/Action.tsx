@@ -27,8 +27,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-let intervalId: NodeJS.Timeout | null = null;
-
 export default function ActionBar(props: { 
   className?: string; 
   onSpeak?: (text: string) => void;
@@ -54,6 +52,17 @@ export default function ActionBar(props: {
     (state) => state.global.mobileActiveTab
   );
   const [loading, setLoading] = React.useState(false);
+  const intervalIdRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup ping timer on component unmount
+  React.useEffect(() => {
+    return () => {
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = null;
+      }
+    };
+  }, []);
 
   // Get greeting scripts for the selected graph
   // Priority 1: From graph properties (if available via API)
@@ -132,18 +141,18 @@ export default function ActionBar(props: {
   };
 
   const startPing = () => {
-    if (intervalId) {
+    if (intervalIdRef.current) {
       stopPing();
     }
-    intervalId = setInterval(() => {
+    intervalIdRef.current = setInterval(() => {
       apiPing(channel);
     }, 3000);
   };
 
   const stopPing = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
+      intervalIdRef.current = null;
     }
   };
 
