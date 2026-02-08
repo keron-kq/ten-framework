@@ -143,8 +143,15 @@ export class RtcManager extends AGEventEmitter<RtcEvents> {
   }
 
   async destroy() {
+    // Clean up all local tracks
     this.localTracks?.audioTrack?.close();
     this.localTracks?.videoTrack?.close();
+    this.localTracks?.screenTrack?.close();
+    
+    // Clean up VAD listener
+    this.disableVAD();
+    
+    // Leave channel
     if (this._joined) {
       await this.client?.leave();
     }
