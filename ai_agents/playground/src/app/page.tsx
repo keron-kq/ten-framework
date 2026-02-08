@@ -75,9 +75,24 @@ export default function Home() {
 
   React.useEffect(() => {
     // Initialize BroadcastChannel
-    broadcastChannelRef.current = new BroadcastChannel("avatar_control");
+    const channel = new BroadcastChannel("avatar_control");
+    broadcastChannelRef.current = channel;
+    
+    // Listen for messages from projection window
+    channel.onmessage = (event) => {
+      if (event.data?.type === "avatar_window_ready") {
+        console.log("[page.tsx] Projection window is ready");
+      }
+      if (event.data?.type === "avatar_window_closed") {
+        console.log("[page.tsx] Projection window closed, cleaning up");
+        setIsProjectionMode(false);
+        isProjectionModeRef.current = false;
+      }
+    };
+    
     return () => {
-      broadcastChannelRef.current?.close();
+      channel.onmessage = null;
+      channel.close();
     };
   }, []);
 
@@ -324,6 +339,35 @@ export default function Home() {
     }
   };
 
+  // Close all external app windows (mutual exclusion)
+  const closeAllExternalApps = () => {
+    setShowExternalApp(false); setExternalAppExpanded(false);
+    setShowExternalApp2(false); setExternalApp2Expanded(false);
+    setShowGestureApp(false); setGestureAppExpanded(false);
+    setShowConsistencyApp(false); setConsistencyAppExpanded(false);
+    setShowInteractiveHTML(false); setInteractiveHTMLExpanded(false);
+    setShowDS7000(false); setDS7000Expanded(false);
+    setShowQRCode(false); setQRCodeExpanded(false);
+  };
+
+  // Toggle an external app with mutual exclusion
+  const toggleExternalApp = (
+    currentShow: boolean,
+    setShow: (v: boolean) => void,
+    setExpanded: (v: boolean) => void
+  ) => {
+    if (currentShow) {
+      // Closing current app
+      setShow(false);
+      setExpanded(false);
+    } else {
+      // Close all others first, then open this one
+      closeAllExternalApps();
+      setShow(true);
+      setExpanded(true);
+    }
+  };
+
   const handleVadThresholdChange = (threshold: number) => {
     setVadThreshold(threshold);
     const { rtcManager } = require("../manager/rtc/rtc");
@@ -498,11 +542,7 @@ export default function Home() {
                                 : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
                         }`}
                         title={showExternalApp2 ? "关闭人脸检测" : "人脸检测"}
-                        onClick={() => {
-                            const newState = !showExternalApp2;
-                            setShowExternalApp2(newState);
-                            setExternalApp2Expanded(newState);
-                        }}
+                        onClick={() => toggleExternalApp(showExternalApp2, setShowExternalApp2, setExternalApp2Expanded)}
                     >
                         <Globe className="h-4 w-4" />
                     </Button>
@@ -517,11 +557,7 @@ export default function Home() {
                                 : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
                         }`}
                         title={showQRCode ? "关闭二维码" : "显示二维码"}
-                        onClick={() => {
-                            const newState = !showQRCode;
-                            setShowQRCode(newState);
-                            setQRCodeExpanded(newState);
-                        }}
+                        onClick={() => toggleExternalApp(showQRCode, setShowQRCode, setQRCodeExpanded)}
                     >
                         <QrCode className="h-4 w-4" />
                     </Button>
@@ -536,11 +572,7 @@ export default function Home() {
                                 : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
                         }`}
                         title={showExternalApp ? "关闭 Web Control" : "Web Control"}
-                        onClick={() => {
-                            const newState = !showExternalApp;
-                            setShowExternalApp(newState);
-                            setExternalAppExpanded(newState);
-                        }}
+                        onClick={() => toggleExternalApp(showExternalApp, setShowExternalApp, setExternalAppExpanded)}
                     >
                         <Monitor className="h-4 w-4" />
                     </Button>
@@ -555,11 +587,7 @@ export default function Home() {
                                 : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
                         }`}
                         title={showGestureApp ? "关闭手势识别" : "手势识别"}
-                        onClick={() => {
-                            const newState = !showGestureApp;
-                            setShowGestureApp(newState);
-                            setGestureAppExpanded(newState);
-                        }}
+                        onClick={() => toggleExternalApp(showGestureApp, setShowGestureApp, setGestureAppExpanded)}
                     >
                         <Hand className="h-4 w-4" />
                     </Button>
@@ -574,11 +602,7 @@ export default function Home() {
                                 : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
                         }`}
                         title={showInteractiveHTML ? "关闭插线检测" : "插线检测"}
-                        onClick={() => {
-                            const newState = !showInteractiveHTML;
-                            setShowInteractiveHTML(newState);
-                            setInteractiveHTMLExpanded(newState);
-                        }}
+                        onClick={() => toggleExternalApp(showInteractiveHTML, setShowInteractiveHTML, setInteractiveHTMLExpanded)}
                     >
                         <FileText className="h-4 w-4" />
                     </Button>
@@ -593,11 +617,7 @@ export default function Home() {
                                 : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
                         }`}
                         title={showDS7000 ? "关闭DS70000" : "DS70000"}
-                        onClick={() => {
-                            const newState = !showDS7000;
-                            setShowDS7000(newState);
-                            setDS7000Expanded(newState);
-                        }}
+                        onClick={() => toggleExternalApp(showDS7000, setShowDS7000, setDS7000Expanded)}
                     >
                         <Monitor className="h-4 w-4" />
                     </Button>
@@ -612,11 +632,7 @@ export default function Home() {
                                 : "border-[#FFCC00] bg-[#181a1d] text-[#FFCC00] hover:bg-[#FFCC00] hover:text-black shadow-[0_0_10px_rgba(255,204,0,0.2)]"
                         }`}
                         title={showConsistencyApp ? "关闭一致性测试" : "一致性测试"}
-                        onClick={() => {
-                            const newState = !showConsistencyApp;
-                            setShowConsistencyApp(newState);
-                            setConsistencyAppExpanded(newState);
-                        }}
+                        onClick={() => toggleExternalApp(showConsistencyApp, setShowConsistencyApp, setConsistencyAppExpanded)}
                     >
                         <TestTube className="h-4 w-4" />
                     </Button>

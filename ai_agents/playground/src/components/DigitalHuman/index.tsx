@@ -43,6 +43,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
     const [sdkReady, setSdkReady] = useState(false);
     const [instance, setInstance] = useState<any>(null);
     const [status, setStatus] = useState<string>("init");
+    const statusRef = useRef<string>("init");
     const containerId = "xmov-container";
 
     // Polyfill for potential SDK bug (windows vs window)
@@ -91,6 +92,11 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sdkReady, autoConnect]); // Add autoConnect dependency
 
+    // Keep statusRef in sync with status state
+    useEffect(() => {
+        statusRef.current = status;
+    }, [status]);
+
     // Poll instance status using getStatus() method
     useEffect(() => {
         if (!instance) return;
@@ -126,11 +132,10 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
         };
     }, [instance]);
 
-    // Expose methods to parent
+    // Expose methods to parent (use statusRef to avoid closure stale value)
     useImperativeHandle(ref, () => ({
       speak: (text: string, isStart: boolean = true, isEnd: boolean = true) => {
-        if (instance && status === "connected") {
-          // Streaming speak logic with isStart/isEnd flags
+        if (instance && statusRef.current === "connected") {
           try {
              if (instance && typeof instance.speak === 'function') {
                  console.log(`[DigitalHuman] speak("${text}", start=${isStart}, end=${isEnd})`);
@@ -143,7 +148,7 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
           console.warn("[DigitalHuman] Not connected, cannot speak:", text);
         }
       },
-      isConnected: () => status === "connected",
+      isConnected: () => statusRef.current === "connected",
       disconnect: () => {
         console.log("[DigitalHuman] Disconnecting...");
         if (instance && typeof instance.destroy === 'function') {
@@ -177,9 +182,8 @@ const DigitalHuman = forwardRef<DigitalHumanRef, { className?: string; autoConne
       },
       stopSpeaking: () => {
         console.log("[DigitalHuman] Stopping current speech (interrupt)");
-        if (instance && status === "connected") {
+        if (instance && statusRef.current === "connected") {
           try {
-            // Try to stop current speech and return to idle
             if (typeof instance.idle === 'function') {
               instance.idle();
               console.log("[DigitalHuman] Interrupted, returned to idle state");

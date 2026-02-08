@@ -28,28 +28,25 @@ export default function AvatarPage() {
     window.open(`/video/${videoId}`, `Video${videoId}`, "width=1920,height=1080");
   };
 
+  // BroadcastChannel: create once on mount, not on started change
+  const channelRef = useRef<BroadcastChannel | null>(null);
+  
   useEffect(() => {
-    // Initialize BroadcastChannel
     const channel = new BroadcastChannel("avatar_control");
+    channelRef.current = channel;
 
     channel.onmessage = (event) => {
       const { type, payload } = event.data;
       console.log(`[AvatarPage] Received message: ${type}`, payload);
 
-      if (!digitalHumanRef.current?.isConnected() && type !== "destroy") {
-        console.warn("[AvatarPage] Digital Human not connected yet (msg ignored)");
-        return;
-      }
-
+      // Queue speak commands even if DH not connected yet
+      // (they will be ignored gracefully by the DH component)
       switch (type) {
         case "speak":
-          // payload: { text, isStart, isEnd }
-          // Just forward to SDK directly
           digitalHumanRef.current?.speak(payload.text, payload.isStart, payload.isEnd);
           break;
           
         case "external_app":
-          // payload: { show }
           setShowExternalApp(payload.show);
           break;
           
@@ -67,13 +64,22 @@ export default function AvatarPage() {
       }
     };
     
-    // Notify opener that we are alive (optional)
+    // Notify opener that we are alive
     channel.postMessage({ type: "avatar_window_ready" });
 
-    return () => {
-      channel.close();
+    // Notify main page when this window is about to close
+    const handleBeforeUnload = () => {
+      channel.postMessage({ type: "avatar_window_closed" });
     };
-  }, [started]);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      channel.onmessage = null;
+      channel.close();
+      channelRef.current = null;
+    };
+  }, []); // Empty dependency: create once on mount
 
   return (
     <div className="w-screen h-screen bg-black overflow-hidden relative flex flex-col items-center justify-center">
