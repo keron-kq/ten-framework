@@ -43,6 +43,9 @@ class MainControlExtension(AsyncExtension):
         self.turn_id: int = 0
         self.session_id: str = "0"
         
+        # Turn-based guard: incremented on interrupt, checked in LLM response
+        self._active_turn: int = 0
+        
         # Conversation State Machine
         self.in_conversation: bool = False
         self.last_interaction_time: float = 0.0
@@ -123,6 +126,8 @@ class MainControlExtension(AsyncExtension):
             await self._interrupt()
         if event.final:
             self.turn_id += 1
+            # Allow LLM responses for this new turn
+            self._active_turn = self.turn_id
             
             # Remove wake words before sending to LLM to avoid confusion
             llm_input = event.text
@@ -145,6 +150,11 @@ class MainControlExtension(AsyncExtension):
 
     @agent_event_handler(LLMResponseEvent)
     async def _on_llm_response(self, event: LLMResponseEvent):
+        # Drop stale responses: if turn_id has advanced past _active_turn,
+        # it means an interrupt occurred and this response is outdated.
+        if self.turn_id != self._active_turn:
+            return
+
         # Keep conversation alive while agent is speaking
         if self.in_conversation:
             self.last_interaction_time = time.time()
@@ -159,7 +169,8 @@ class MainControlExtension(AsyncExtension):
         if event.is_final and event.type == "message":
             remaining_text = self.sentence_fragment or ""
             self.sentence_fragment = ""
-            await self._send_to_tts(remaining_text, True)
+            if remaining_text.strip():
+                await self._send_to_tts(remaining_text, True)
 
         await self._send_transcript(
             "assistant",
@@ -257,7 +268,10 @@ class MainControlExtension(AsyncExtension):
     async def _interrupt(self):
         """
         Interrupts ongoing LLM and TTS generation. Typically called when user speech is detected.
+        Invalidates old responses by advancing turn_id past _active_turn.
         """
+        # Advance turn_id so _on_llm_response will drop stale responses
+        self.turn_id += 1
         self.sentence_fragment = ""
         await self.agent.flush_llm()
         await _send_data(
