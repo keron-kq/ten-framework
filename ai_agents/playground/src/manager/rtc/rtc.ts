@@ -332,6 +332,8 @@ export class RtcManager extends AGEventEmitter<RtcEvents> {
 
   // ========== VAD Methods (Minimal Implementation) ==========
   
+  private _vadHandler: ((volumes: any[]) => void) | null = null;
+  
   enableVAD(threshold: number = 15, consecutive: number = 2) {
     this.volumeThreshold = threshold;
     this.consecutiveRequired = consecutive;
@@ -340,14 +342,20 @@ export class RtcManager extends AGEventEmitter<RtcEvents> {
       return;
     }
 
+    // Remove old listener before adding new one to prevent accumulation
+    if (this._vadHandler) {
+      this.client.off("volume-indicator", this._vadHandler);
+    }
+
     this.client.enableAudioVolumeIndicator();
-    this.client.on("volume-indicator", (volumes) => {
-      volumes.forEach((volume) => {
+    this._vadHandler = (volumes) => {
+      volumes.forEach((volume: any) => {
         if (volume.uid === 0) {
           this._detectUserSpeaking(volume.level);
         }
       });
-    });
+    };
+    this.client.on("volume-indicator", this._vadHandler);
     
     this.vadEnabled = true;
   }
@@ -355,6 +363,11 @@ export class RtcManager extends AGEventEmitter<RtcEvents> {
   disableVAD() {
     this.vadEnabled = false;
     this.consecutiveCount = 0;
+    // Remove listener when disabling
+    if (this._vadHandler && this.client) {
+      this.client.off("volume-indicator", this._vadHandler);
+      this._vadHandler = null;
+    }
   }
 
   setDigitalHumanSpeaking(isSpeaking: boolean) {
