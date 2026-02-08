@@ -82,18 +82,8 @@ export default function ActionBar(props: {
     }
   }
 
-  React.useEffect(() => {
-    if (channel) {
-      checkAgentConnected();
-    }
-  }, [channel]);
-
-  const checkAgentConnected = async () => {
-    const res: any = await apiPing(channel);
-    if (res?.code == 0) {
-      dispatch(setAgentConnected(true));
-    }
-  };
+  // No auto-check needed: fresh channel is generated on each page load
+  // so there's no stale agent to worry about
 
   const onClickConnect = async () => {
     if (loading) {
